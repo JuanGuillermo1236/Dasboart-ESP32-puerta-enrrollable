@@ -1,0 +1,6 @@
+node_modules/
+frontend/dist/
+firmware/.pio/
+firmware/data/
+firmware/include/secrets.h
+*.log

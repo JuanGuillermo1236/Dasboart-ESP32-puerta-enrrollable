@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600;700&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#ecffb6;--g1:#f3ffd0;--g2:#d6fb00;--blobA:#d6fb00;--blobB:#f4ffd6;--blobC:rgba(0,84,95,.55);--ink:#00545f;--ink2:rgba(0,84,95,.82);--card:rgba(250,255,232,.6);--cardBorder:rgba(255,255,255,.75);--line:rgba(0,84,95,.16);--chip:rgba(0,84,95,.07);--solid:#00545f;--solidInk:#ecffb6;--hi:#00545f;--accent:#d6fb00;--accentInk:#00545f;--bed:rgba(0,84,95,.10);--bean:rgba(0,84,95,.45);--roof:#00545f;--roofStripe:rgba(236,255,182,.22);--shadow:0 14px 40px -22px rgba(0,84,95,.45);--ok:oklch(0.52 0.13 158);--warn:oklch(0.8 0.15 70);--crit:oklch(0.56 0.2 25);--blend:multiply;
+--noise:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.2 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+html[data-theme="dark"]{--bg:#00545f;--g1:#00434c;--g2:#00616c;--blobA:rgba(214,251,0,.42);--blobB:rgba(236,255,182,.28);--blobC:#00353c;--ink:#ecffb6;--ink2:rgba(236,255,182,.8);--card:rgba(0,46,53,.5);--cardBorder:rgba(236,255,182,.14);--line:rgba(236,255,182,.16);--chip:rgba(236,255,182,.08);--solid:#d6fb00;--solidInk:#00545f;--hi:#d6fb00;--bed:rgba(236,255,182,.08);--bean:rgba(236,255,182,.42);--roof:#d6fb00;--roofStripe:rgba(0,84,95,.28);--shadow:0 14px 40px -22px rgba(0,0,0,.6);--ok:oklch(0.62 0.14 158);--crit:oklch(0.62 0.2 25);--blend:soft-light;}
+html,body{margin:0;padding:0;background:var(--bg);}
+*{box-sizing:border-box;}
+a{color:var(--ink);}
+a:hover{color:var(--ink2);}
+button{font:inherit;}
+@keyframes drift1{0%{transform:translate(0,0) scale(1)}50%{transform:translate(9vw,7vh) scale(1.18)}100%{transform:translate(0,0) scale(1)}}
+@keyframes drift2{0%{transform:translate(0,0) scale(1.1)}50%{transform:translate(-8vw,-6vh) scale(.92)}100%{transform:translate(0,0) scale(1.1)}}
+@keyframes drift3{0%{transform:translate(0,0)}50%{transform:translate(-6vw,5vh)}100%{transform:translate(0,0)}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 var(--hi)}70%{box-shadow:0 0 0 12px rgba(0,0,0,0)}100%{box-shadow:0 0 0 0 rgba(0,0,0,0)}}
+@keyframes fall{0%{transform:translateY(-30px);opacity:0}20%{opacity:.8}100%{transform:translateY(160px);opacity:0}}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.swipe-hint{display:none;}
+@media (max-width:780px){.swipe-hint{display:block;}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none !important;transition:none !important;}}
+</style>
+</helmet>
+
+<div style="min-height:100vh; position:relative; color:var(--ink); font-family:'Instrument Sans',system-ui,sans-serif; font-size:15px; overflow-x:hidden;">
+  <div style="position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; background:linear-gradient(165deg, var(--g1) 0%, var(--g2) 120%);">
+    <div style="position:absolute; width:80vmax; height:80vmax; left:-25vmax; top:-30vmax; border-radius:50%; background:radial-gradient(circle, var(--blobA) 0%, rgba(0,0,0,0) 65%); filter:blur(40px); animation:drift1 38s ease-in-out infinite; animation-play-state:{{ bgPlay }};"></div>
+    <div style="position:absolute; width:60vmax; height:60vmax; right:-20vmax; top:20vh; border-radius:50%; background:radial-gradient(circle, var(--blobB) 0%, rgba(0,0,0,0) 65%); filter:blur(40px); animation:drift2 46s ease-in-out infinite; animation-play-state:{{ bgPlay }};"></div>
+    <div style="position:absolute; width:70vmax; height:70vmax; right:-30vmax; bottom:-40vmax; border-radius:50%; background:radial-gradient(circle, var(--blobC) 0%, rgba(0,0,0,0) 62%); filter:blur(50px); animation:drift3 52s ease-in-out infinite; animation-play-state:{{ bgPlay }};"></div>
+    <div style="position:absolute; inset:0; background-image:var(--noise); background-size:220px; mix-blend-mode:var(--blend); opacity:{{ grain }};"></div>
+  </div>
+
+  <div style="position:relative; z-index:1; max-width:1240px; margin:0 auto; padding:0 clamp(12px,3vw,28px) 80px;">
+    <header style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:20px 0 16px;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="position:relative; width:44px; height:44px; flex:none;">
+          <div style="position:absolute; left:0; top:0; width:30px; height:30px; border-radius:50%; background:#ecffb6; box-shadow:0 0 0 1px rgba(0,84,95,.2);"></div>
+          <div style="position:absolute; left:7px; top:8px; width:30px; height:30px; border-radius:50%; background:#d6fb00;"></div>
+          <div style="position:absolute; left:14px; top:14px; width:30px; height:30px; border-radius:50%; background:#00545f;"></div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:2px;">
+          <div style="font-family:'Unbounded',sans-serif; font-weight:600; font-size:21px; letter-spacing:-0.02em; line-height:1.1;">CacaoCover</div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink2);">Secado de cacao · ESP32</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; background:var(--card); border:1px solid var(--cardBorder); backdrop-filter:blur(16px); font-family:'JetBrains Mono',monospace; font-size:12px;">
+          <span style="width:9px; height:9px; border-radius:50%; background:{{ connColor }};"></span>
+          <span style="white-space:nowrap;">{{ connLabel }}</span>
+        </div>
+        <div style="padding:8px 14px; border-radius:999px; background:var(--solid); color:var(--solidInk); font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; letter-spacing:.08em;">{{ modoBadge }}</div>
+        <sc-if value="{{ simOn }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:8px 14px; border-radius:999px; background:var(--warn); color:#00545f; font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; letter-spacing:.08em;">SIMULACIÓN</div>
+        </sc-if>
+        <button onClick="{{ toggleTheme }}" style="padding:8px 14px; min-height:44px; border-radius:999px; border:1px solid var(--cardBorder); background:var(--card); color:var(--ink); cursor:pointer; font-size:13px; font-weight:600; backdrop-filter:blur(16px); display:flex; align-items:center; gap:8px;">
+          <span style="width:14px; height:14px; border-radius:50%; background:linear-gradient(90deg, #00545f 50%, #ecffb6 50%); box-shadow:0 0 0 1px var(--line);"></span>{{ themeLabel }}
+        </button>
+      </div>
+    </header>
+
+    <nav style="position:sticky; top:10px; z-index:10; display:flex; gap:4px; padding:5px; border-radius:999px; background:var(--card); border:1px solid var(--cardBorder); backdrop-filter:blur(22px) saturate(1.4); box-shadow:var(--shadow); overflow-x:auto; scrollbar-width:none; margin-bottom:20px;">
+      <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="6">
+        <button onClick="{{ t.go }}" style="flex:1 0 auto; padding:11px 18px; min-height:44px; border:none; border-radius:999px; cursor:pointer; font-size:14px; font-weight:600; white-space:nowrap; background:{{ t.bg }}; color:{{ t.fg }}; display:flex; align-items:center; justify-content:center; gap:8px; transition:background .2s;">
+          {{ t.label }}
+          <sc-if value="{{ t.hasBadge }}" hint-placeholder-val="{{ false }}"><span style="min-width:20px; height:20px; padding:0 6px; border-radius:999px; background:var(--crit); color:#fff; font-size:11px; font-family:'JetBrains Mono',monospace; display:flex; align-items:center; justify-content:center;">{{ t.badge }}</span></sc-if>
+        </button>
+      </sc-for>
+    </nav>
+
+    <!-- RESUMEN -->
+    <sc-if value="{{ isResumen }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex; flex-direction:column; gap:16px; animation:rise .4s ease both;">
+        <div style="display:flex; flex-wrap:wrap; gap:16px;">
+          <section style="flex:1.7 1 520px; min-width:0; background:var(--card); backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--cardBorder); border-radius:32px; padding:clamp(18px,3vw,28px); box-shadow:var(--shadow); display:flex; flex-direction:column; gap:18px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+              <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <span style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink2);">Cubierta</span>
+                <span style="display:flex; align-items:center; gap:6px; padding:5px 11px; border-radius:999px; background:{{ cubChip.bg }}; color:{{ cubChip.fg }}; font-size:12px; font-weight:700;"><span>{{ cubChip.icon }}</span>{{ cubEstado }}</span>
+              </div>
+              <div style="display:flex; padding:4px; border-radius:999px; background:var(--chip); gap:2px;">
+                <button onClick="{{ setAuto }}" style="border:none; cursor:pointer; padding:9px 14px; min-height:40px; border-radius:999px; font-size:13px; font-weight:700; background:{{ autoBg }}; color:{{ autoFg }};">Automático</button>
+                <button onClick="{{ setManual }}" style="border:none; cursor:pointer; padding:9px 14px; min-height:40px; border-radius:999px; font-size:13px; font-weight:700; background:{{ manualBg }}; color:{{ manualFg }};">Manual</button>
+              </div>
+            </div>
+            <div style="display:flex; flex-direction:column; font-family:'Unbounded',sans-serif; font-weight:600; font-size:clamp(40px,7.5vw,76px); letter-spacing:-0.035em; line-height:.86;">
+              <span>{{ cubWord }}</span>
+              <span style="opacity:.32; margin-top:-0.08em;">{{ cubWord }}</span>
+              <span style="opacity:.11; margin-top:-0.08em;">{{ cubWord }}</span>
+            </div>
+            <div style="display:flex; gap:10px 20px; flex-wrap:wrap; align-items:baseline;">
+              <div style="font-size:17px; font-weight:600;">{{ razonText }}</div>
+              <div style="font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--ink2);">{{ razonHora }}</div>
+            </div>
+            <div style="position:relative; height:160px; border-radius:24px; background:var(--chip); border:1px solid var(--line); overflow:hidden;">
+              <div style="position:absolute; right:16px; bottom:70px; display:flex; align-items:center; gap:8px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink2); z-index:2; padding:3px 8px 3px 10px; border-radius:999px; background:var(--card);">{{ skyLabel }}<span style="width:22px; height:22px; border-radius:50%; background:{{ skyBg }}; box-shadow:0 0 0 1px var(--line);"></span></div>
+              <sc-if value="{{ raining }}" hint-placeholder-val="{{ false }}">
+                <div style="position:absolute; inset:0; pointer-events:none;">
+                  <sc-for list="{{ drops }}" as="d" hint-placeholder-count="0">
+                    <span style="position:absolute; top:0; left:{{ d.left }}; width:2px; height:16px; border-radius:2px; background:var(--ink); opacity:.5; animation:fall 1.1s linear infinite; animation-delay:{{ d.delay }};"></span>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <div style="position:absolute; left:18px; right:18px; bottom:18px; height:44px; border-radius:12px; background:radial-gradient(ellipse 4px 3px at 50% 50%, var(--bean) 98%, rgba(0,0,0,0) 100%) 0 0/13px 10px, var(--bed);"></div>
+              <div style="position:absolute; left:18px; right:18px; top:40px; height:3px; border-radius:2px; background:var(--ink); opacity:.4;"></div>
+              <div style="position:absolute; left:18px; right:18px; top:44px; height:72px; overflow:hidden; border-radius:12px;">
+                <div style="position:absolute; inset:0; border-radius:12px; background:repeating-linear-gradient(90deg, var(--roofStripe) 0 2px, rgba(0,0,0,0) 2px 15px), var(--roof); transform:translateX({{ roofX }}); transition:transform .25s linear; box-shadow:inset -6px 0 0 rgba(0,0,0,.12);"></div>
+              </div>
+              <div style="position:absolute; left:10px; top:34px; width:14px; height:14px; border-radius:50%; background:{{ fcaLed }}; box-shadow:0 0 0 2px var(--card);"></div>
+              <div style="position:absolute; right:10px; top:34px; width:14px; height:14px; border-radius:50%; background:{{ fccLed }}; box-shadow:0 0 0 2px var(--card);"></div>
+              <div style="position:absolute; left:18px; top:12px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink2);">FC abierto</div>
+              <div style="position:absolute; right:18px; top:12px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink2);">FC cerrado</div>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <div style="flex:1 1 140px; padding:12px 14px; border-radius:18px; background:var(--chip);"><div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink2);">Posición</div><div style="font-family:'Unbounded',sans-serif; font-size:22px; font-weight:600; margin-top:4px;">{{ posLabel }}</div></div>
+              <div style="flex:1 1 140px; padding:12px 14px; border-radius:18px; background:var(--chip);"><div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink2);">Motor</div><div style="display:flex; align-items:center; gap:8px; font-family:'Unbounded',sans-serif; font-size:22px; font-weight:600; margin-top:4px;"><span style="width:10px; height:10px; border-radius:50%; background:{{ motorDot }}; animation:{{ motorPulse }};"></span>{{ motorDirLabel }}</div></div>
+              <div style="flex:1 1 140px; padding:12px 14px; border-radius:18px; background:var(--chip);"><div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink2);">Ciclos</div><div style="font-family:'Unbounded',sans-serif; font-size:22px; font-weight:600; margin-top:4px;">{{ ciclos }}</div></div>
+            </div>
+          </section>
+
+          <section style="flex:1 1 300px; min-width:0; background:var(--card); backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--cardBorder); border-radius:32px; padding:clamp(18px,3vw,26px); box-shadow:var(--shadow); display:flex; flex-direction:column; gap:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h2 style="margin:0; font-family:'Unbounded',sans-serif; font-size:17px; font-weight:600;">Centro de alertas</h2>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink2);">{{ alertCount }}</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <sc-for list="{{ alerts }}" as="a" hint-placeholder-count="2">
+                <div style="display:flex; gap:12px; padding:14px; border-radius:20px; background:var(--chip); border:1px solid {{ a.border }};">
+                  <span style="flex:none; width:34px; height:34px; border-radius:50%; background:{{ a.bg }}; color:{{ a.fg }}; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px;">{{ a.icon }}</span>
+                  <div style="display:flex; flex-direction:column; gap:3px; min-width:0;">
+                    <div style="display:flex; gap:8px; align-items:baseline; flex-wrap:wrap;"><span style="font-weight:700; font-size:15px;">{{ a.title }}</span><span style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink2);">{{ a.sevLabel }}</span></div>
+                    <div style="font-size:13.5px; color:var(--ink2); text-wrap:pretty;">{{ a.detail }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%,240px),1fr)); gap:16px;">
+          <sc-for list="{{ tiles }}" as="t" hint-placeholder-count="4">
+            <div onClick="{{ goSensores }}" style="cursor:pointer; background:var(--card); backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--cardBorder); border-radius:28px; padding:20px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:12px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                <span style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink2);">{{ t.label }}</span>
+                <sc-if value="{{ t.hasTag }}" hint-placeholder-val="{{ false }}"><span style="padding:4px 9px; border-radius:999px; background:{{ t.tagBg }}; color:{{ t.tagFg }}; font-size:11px; font-weight:700;">{{ t.tag }}</span></sc-if>
+              </div>
+              <div style="display:flex; align-items:center; gap:14px;">
+                <div style="position:relative; width:76px; height:76px; flex:none;">
+                  <svg viewBox="0 0 100 100" width="76" height="76" style="display:block;">
+                    <circle cx="50" cy="50" r="40" fill="none" transform="rotate(135 50 50)" style="stroke:var(--line); stroke-width:11; stroke-linecap:round; stroke-dasharray:188.5 999;"></circle>
+                    <circle cx="50" cy="50" r="40" fill="none" transform="rotate(135 50 50)" style="stroke:var(--hi); stroke-width:11; stroke-linecap:round; stroke-dasharray:{{ t.dash }}; transition:stroke-dasharray .6s ease;"></circle>
+                  </svg>
+                  <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:700;">{{ t.trend }}</div>
+                </div>
+                <div style="display:flex; flex-direction:column; min-width:0;">
+                  <div style="display:flex; align-items:baseline; gap:4px;"><span style="font-family:'Unbounded',sans-serif; font-weight:600; font-size:38px; letter-spacing:-0.03em; line-height:1;">{{ t.value }}</span><span style="font-size:16px; font-weight:600; color:var(--ink2);">{{ t.unit }}</span></div>
+                  <div style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink2); margin-top:6px;">{{ t.sub }}</div>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:flex; flex-wrap:wrap; gap:16px;">
+          <section style="flex:1 1 300px; min-width:0; background:var(--card); backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--cardBorder); border-radius:28px; padding:20px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;"><h2 style="margin:0; font-family:'Unbounded',sans-serif; font-size:15px; font-weight:600;">Pantalla OLED</h2><span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink2);">SSD1306 · 128×64</span></div>
+            <div style="padding:12px; border-radius:16px; background:#0b1416; box-shadow:inset 0 0 0 1px rgba(255,255,255,.08), 0 0 0 6px #18262a;">
+              <canvas data-oled="1" style="width:100%; aspect-ratio:2/1; display:block; image-rendering:pixelated; background:#020607; border-radius:2px;"></canvas>
+            </div>
+          </section>
+          <section style="flex:1 1 260px; min-width:0; background:var(--card); backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--cardBorder); border-radius:28px; padding:20px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:12px;">
+            <h2 style="margin:0; font-family:'Unbounded',sans-serif; font-size:15px; font-weight:600;">Sistema</h2>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <div style="padding:12px; border-radius:16px; background:var(--chip);"><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink2);">ENTRADA</div><div style="font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; margin-top:4px;">{{ v5Label }}</div></div>
+              <div style="padding:12px; border-radius:16px; background:var(--chip);"><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink2);">MOTOR</div><div style="font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; margin-top:4px;">{{ v6Label }}</div></div>
+              <div style="padding:12px; border-radius:16px; background:var(--chip);"><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink2);">WIFI</div><div style="display:flex; align-items:flex-end; gap:8px; margin-top:6px;"><div style="display:flex; align-items:flex-end; gap:3px; height:20px;"><sc-for list="{{ bars }}" as="b" hint-placeholder-count="4"><span style="width:5px; border-radius:2px; height:{{ b.h }}; background:var(--ink); opacity:{{ b.op }};"></span></sc-for></div><span style="font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700;">{{ rssiLabel }}</span></div></div>
+              <div style="padding:12px; border-radius:16px; background:var(--chip);"><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink2);">UPTIME</div><div style="font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:700; margin-top:6px;">{{ uptimeLabel }}</div></div>
+            </div>
+          </section>
+          <section style="flex:1.3 1 320px; min-width:0; background:var(--card); backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--cardBorder); border-radius:28px; padding:20px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;"><h2 style="margin:0; font-family:'Unbounded',sans-serif; font-size:15px; font-weight:600;">Últimos eventos</h2><button onClick="{{ goHistorial }}" style="border:none; background:none; color:var(--ink); font-weight:600; cursor:pointer; text-decoration:underline; padding:6px 0; min-height:44px;">Ver registro</button></div>
+            <sc-for list="{{ recentEvents }}" as="ev" hint-placeholder-count="5">
+              <div style="display:grid; grid-template-columns:54px 1fr; gap:10px; align-items:baseline; padding:8px 0; border-top:1px solid var(--line);">
+                <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink2);">{{ ev.hora }}</span>
+                <div style="min-width:0;"><div style="font-weight:600; font-size:14px;">{{ ev.msg }}</div><div style="font-size:12.5px; color:var(--ink2);">{{ ev.causa }}</div></div>
+              </div>
+            </sc-for>
+          </section>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- SENSORES -->
+    <sc-if value="{{ isSensores }}" hint-placeholder-val="{{ false }}">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%,340px),1fr)); gap:16px; animation:rise .4s ease both;">
+        <section style="background:var(--card); backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--cardBorder); border-radius:28px; padding:22px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;"><h2 style="margin:0; font-family:'Unbounded',sans-serif; font-size:16px; font-weight:600;">DHT22</h2><span style="display:flex; gap:6px; padding:5px 11px; border-radius:999px; background:{{ dhtChip.bg }}; color:{{ dhtChip.fg }}; font-size:12px; font-weight:700;">{{ dhtChip.icon }} {{ dhtChip.label }}</span></div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div style="padding:16px; border-radius:22px; background:var(--chip);">
+              <div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.12em; color:var(--ink2);">TEMPERATURA</div>
+              <div style="display:flex; align-items:baseline; gap:6px; margin-top:6px;"><span style="font-family:'Unbounded',sans-serif; font-size:42px; font-weight:600; letter-spacing:-0.03em;">{{ tempLabel }}</span><span style="font-size:18px; font-weight:700;">{{ tempTrend }}</span></div>
+              <div style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink2);">{{ tempMinMax }}</div>
+            </div>
+            <div style="padding:16px; border-radius:22px; background:var(--chip);">
+              <div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.12em; color:var(--ink2);">HUMEDAD RELATIVA</div>
+              <div style="display:flex; align-items:baseline; gap:6px; margin-top:6px;"><span style="font-family:'Unbounded',sans-serif; font-size:42px; font-weight:600; letter-spacing:-0.03em;">{{ humLabel }}</span><span style="font-size:18px; font-weight:700;">{{ humTrend }}</span></div>
+              <div style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink2);">{{ humMinMax }}</div>
+            </div>
+          </div>
+          <div style="font-size:13px; color:var(--ink2); text-wrap:pretty;">Mide la humedad del aire, no la del grano. Ajusta el umbral de cierre con tu experiencia de secado.</div>
+        </section>
+
+        <section style="background:var(--card); backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--cardBorder); border-radius:28px; padding:22px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;"><h2 style="margin:0; font-family:'Unbounded',sans-serif; font-size:16px; font-weight:600;">Luz ambiental · LDR</h2><span style="padding:5px 11px; border-radius:999px; background:var(--solid); color:var(--solidInk); font-size:12px; font-weight:700;">{{ luzLabel }}</span></div>
+          <div style="display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;"><span style="font-family:'Unbounded',sans-serif; font-size:52px; font-weight:600; letter-spacing:-0.03em; line-height:1;">{{ luzPct }}</span><span style="font-size:20px; font-weight:700;">%</span><span style="font-family:'JetBrains Mono',monospace; font-size:14px; color:var(--ink2);">{{ luzRaw }}</span></div>
+          <div style="position:relative; height:14px; border-radius:999px; background:var(--chip); overflow:hidden;"><div style="position:absolute; left:0; top:0; bottom:0; width:{{ luzBar }}; border-radius:999px; background:var(--hi); transition:width .6s;"></div><div style="position:absolute; top:0; bottom:0; width:2px; left:{{ luzMinPos }}; background:var(--crit);"></div></div>
+          <div style="display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink2);"><span>Noche</span><span>{{ luzMinNote }}</span><span>Soleado</span></div>
+        </section>
+
+        <section style="background:var(--card); backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--cardBorder); border-radius:28px; padding:22px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;"><h2 style="margin:0; font-family:'Unbounded',sans-serif; font-size:16px; font-weight:600;">Sensor de lluvia</h2><span style="display:flex; gap:6px; padding:5px 11px; border-radius:999px; background:{{ rainChip.bg }}; color:{{ rainChip.fg }}; font-size:12px; font-weight:700;">{{ rainChip.icon }} {{ rainChip.label }}</span></div>
+          <div style="font-family:'Unbounded',sans-serif; font-size:52px; font-weight:600; letter-spacing:-0.03em; line-height:1;">{{ rainLab }}</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div style="padding:14px; border-radius:20px; background:var(--chip);"><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink2);">AO · ANALÓGICO</div><div style="font-family:'JetBrains Mono',monospace; font-size:26px; font-weight:700; margin-top:4px;">{{ rainRaw }}</div><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink2);">{{ rainThrLabel }}</div></div>
+            <div style="padding:14px; border-radius:20px; background:var(--chip);"><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink2);">DO · COMPARADOR</div><div style="display:flex; align-items:center; gap:10px; margin-top:6px;"><span style="width:18px; height:18px; border-radius:50%; background:{{ doLed }}; box-shadow:0 0 0 3px var(--chip);"></span><span style="font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700;">{{ doLabel }}</span></div></div>
+          </div>
+        </section>
+
+        <section style="background:var(--card); backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--cardBorder); border-radius:28px; padding:22px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:14px;">
+          <h2 style="margin:0; font-family:'Unbounded',sans-serif; font-size:16px; font-weight:600;">Finales de carrera</h2>
+          <sc-for list="{{ fcList }}" as="f" hint-placeholder-count="2">
+            <div style="display:flex; align-items:center; gap:16px; padding:14px 16px; border-radius:20px; background:var(--chip);">
+              <span style="flex:none; width:28px; height:28px; border-radius:50%; background:{{ f.led }}; box-shadow:{{ f.glow }};"></span>
+              <div style="flex:1; min-width:0;"><div style="font-weight:700; font-size:16px;">{{ f.name }}</div><div style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink2);">{{ f.pin }}</div></div>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700;">{{ f.state }}</span>
+            </div>
+          </sc-for>
+        </section>
+
+        <section style="background:var(--card); backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--cardBorder); border-radius:28px; padding:22px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;"><h2 style="margin:0; font-family:'Unbounded',sans-serif; font-size:16px; font-weight:600;">Alimentación</h2><span style="display:flex; gap:6px; padding:5px 11px; border-radius:999px; background:{{ pwrChip.bg }}; color:{{ pwrChip.fg }}; font-size:12px; font-weight:700;">{{ pwrChip.icon }} {{ pwrChip.label }}</span></div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div style="padding:16px; border-radius:20px; background:var(--chip);"><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink2);">ENTRADA · ADAPTADOR</div><div style="font-family:'JetBrains Mono',monospace; font-size:32px; font-weight:700; margin-top:4px;">{{ v5Label }}</div><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink2);">nominal 5,00 V</div></div>
+            <div style="padding:16px; border-radius:20px; background:var(--chip);"><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink2);">SALIDA · ELEVADOR</div><div style="font-family:'JetBrains Mono',monospace; font-size:32px; font-weight:700; margin-top:4px;">{{ v6Label }}</div><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink2);">nominal 6,00 V</div></div>
+          </div>
+        </section>
+
+        <section style="background:var(--card); backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--cardBorder); border-radius:28px; padding:22px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;"><h2 style="margin:0; font-family:'Unbounded',sans-serif; font-size:16px; font-weight:600;">Espejo OLED</h2><span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink2);">0.96" · I²C 0x3C</span></div>
+          <div style="padding:14px; border-radius:16px; background:#0b1416; box-shadow:inset 0 0 0 1px rgba(255,255,255,.08), 0 0 0 6px #18262a;">
+            <canvas data-oled="1" style="width:100%; aspect-ratio:2/1; display:block; image-rendering:pixelated; background:#020607; border-radius:2px;"></canvas>
+          </div>
+        </section>
+      </div>
+    </sc-if>
+
+    <!-- CONTROL -->
+    <sc-if value="{{ isControl }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex; flex-direction:column; gap:16px; animation:rise .4s ease both;">
+        <div style="display:flex; flex-wrap:wrap; gap:16px;">
+          <section style="flex:1.4 1 460px; min-width:0; background:var(--card); backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--cardBorder); border-radius:32px; padding:clamp(18px,3vw,26px); box-shadow:var(--shadow); display:flex; flex-direction:column; gap:18px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+              <h2 style="margin:0; font-family:'Unbounded',sans-serif; font-size:18px; font-weight:600;">Control de la cubierta</h2>
+              <div style="display:flex; padding:4px; border-radius:999px; background:var(--chip); gap:2px;">
+                <button onClick="{{ setAuto }}" style="border:none; cursor:pointer; padding:11px 18px; min-height:44px; border-radius:999px; font-size:14px; font-weight:700; background:{{ autoBg }}; color:{{ autoFg }};">Automático</button>
+                <button onClick="{{ setManual }}" style="border:none; cursor:pointer; padding:11px 18px; min-height:44px; border-radius:999px; font-size:14px; font-weight:700; background:{{ manualBg }}; color:{{ manualFg }};">Manual</button>
+              </div>
+            </div>
+            <div style="font-size:14px; color:var(--ink2);">{{ modoNote }}</div>
+            <div style="display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px;">
+              <button onClick="{{ cmdAbrir }}" style="min-height:96px; border-radius:24px; border:none; cursor:{{ btnCursor }}; opacity:{{ btnOpacity }}; background:#d6fb00; color:#00545f; font-family:'Unbounded',sans-serif; font-size:clamp(15px,2.4vw,20px); font-weight:600; box-shadow:{{ ringAbrir }}; transition:box-shadow .2s, transform .1s;" style-active="transform:scale(.97);">Abrir</button>
+              <button onClick="{{ cmdCerrar }}" style="min-height:96px; border-radius:24px; border:none; cursor:{{ btnCursor }}; opacity:{{ btnOpacity }}; background:#00545f; color:#ecffb6; font-family:'Unbounded',sans-serif; font-size:clamp(15px,2.4vw,20px); font-weight:600; box-shadow:{{ ringCerrar }}; transition:box-shadow .2s, transform .1s;" style-active="transform:scale(.97);">Cerrar</button>
+              <button onClick="{{ cmdDetener }}" style="min-height:96px; border-radius:24px; border:none; cursor:{{ btnCursor }}; opacity:{{ btnOpacity }}; background:var(--crit); color:#fff; font-family:'Unbounded',sans-serif; font-size:clamp(15px,2.4vw,20px); font-weight:600; box-shadow:{{ ringDetener }}; transition:box-shadow .2s, transform .1s;" style-active="transform:scale(.97);">Detener</button>
+            </div>
+            <div style="position:relative; height:160px; border-radius:24px; background:var(--chip); border:1px solid var(--line); overflow:hidden;">
+              <div style="position:absolute; right:16px; bottom:70px; display:flex; align-items:center; gap:8px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink2); z-index:2; padding:3px 8px 3px 10px; border-radius:999px; background:var(--card);">{{ skyLabel }}<span style="width:22px; height:22px; border-radius:50%; background:{{ skyBg }}; box-shadow:0 0 0 1px var(--line);"></span></div>
+              <sc-if value="{{ raining }}" hint-placeholder-val="{{ false }}">
+                <div style="position:absolute; inset:0; pointer-events:none;">
+                  <sc-for list="{{ drops }}" as="d" hint-placeholder-count="0">
+                    <span style="position:absolute; top:0; left:{{ d.left }}; width:2px; height:16px; border-radius:2px; background:var(--ink); opacity:.5; animation:fall 1.1s linear infinite; animation-delay:{{ d.delay }};"></span>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <div style="position:absolute; left:18px; right:18px; bottom:18px; height:44px; border-radius:12px; background:radial-gradient(ellipse 4px 3px at 50% 50%, var(--bean) 98%, rgba(0,0,0,0) 100%) 0 0/13px 10px, var(--bed);"></div>
+              <div style="position:absolute; left:18px; right:18px; top:40px; height:3px; border-radius:2px; background:var(--ink); opacity:.4;"></div>
+              <div style="position:absolute; left:18px; right:18px; top:44px; height:72px; overflow:hidden; border-radius:12px;">
+                <div style="position:absolute; inset:0; border-radius:12px; background:repeating-linear-gradient(90deg, var(--roofStripe) 0 2px, rgba(0,0,0,0) 2px 15px), var(--roof); transform:translateX({{ roofX }}); transition:transform .25s linear; box-shadow:inset -6px 0 0 rgba(0,0,0,.12);"></div>
+              </div>
+              <div style="position:absolute; left:10px; top:34px; width:14px; height:14px; border-radius:50%; background:{{ fcaLed }}; box-shadow:0 0 0 2px var(--card);"></div>
+              <div style="position:absolute; right:10px; top:34px; width:14px; height:14px; border-radius:50%; background:{{ fccLed }}; box-shadow:0 0 0 2px var(--card);"></div>
+              <div style="position:absolute; left:18px; top:12px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink2);">{{ cubEstado }} · {{ posLabel }}</div>
+            </div>
+          </section>
+
+          <section style="flex:1 1 300px; min-width:0; background:var(--card); backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--cardBorder); border-radius:32px; padding:clamp(18px,3vw,26px); box-shadow:var(--shadow); display:flex; flex-direction:column; gap:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;"><h2 style="margin:0; font-family:'Unbounded',sans-serif; font-size:16px; font-weight:600;">Motorreductor N20</h2><span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink2);">DRV8833</span></div>
+            <div style="display:flex; align-items:center; gap:16px;">
+              <div style="width:64px; height:64px; border-radius:50%; background:var(--solid); color:var(--solidInk); display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:700; animation:{{ motorPulse }};">{{ motorGlyph }}</div>
+              <div><div style="font-family:'Unbounded',sans-serif; font-size:28px; font-weight:600; letter-spacing:-0.02em;">{{ motorDirLabel }}</div><div style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink2);">{{ motorDirSub }}</div></div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+              <div style="padding:12px; border-radius:16px; background:var(--chip);"><div style="font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--ink2);">PWM</div><div style="font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:700; margin-top:4px;">{{ pwmLabel }}</div></div>
+              <div style="padding:12px; border-radius:16px; background:var(--chip);"><div style="font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--ink2);">TIEMPO</div><div style="font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:700; margin-top:4px;">{{ runLabel }}</div></div>
+              <div style="padding:12px; border-radius:16px; background:var(--chip);"><div style="font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--ink2);">CICLOS</div><div style="font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:700; margin-top:4px;">{{ ciclos }}</div></div>
+            </div>
+            <div style="position:relative; height:8px; border-radius:999px; background:var(--chip); overflow:hidden;"><div style="position:absolute; left:0; top:0; bottom:0; width:{{ runBar }}; background:{{ runBarColor }}; transition:width .2s linear;"></div></div>
+            <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink2);">{{ runMaxNote }}</div>
+            <sc-if value="{{ jam }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; gap:12px; padding:14px; border-radius:20px; background:var(--crit); color:#fff;">
+                <span style="font-weight:700; font-size:18px;">✕</span>
+                <div><div style="font-weight:700;">Posible atasco</div><div style="font-size:13px;">El motor no llegó al final de carrera a tiempo. Revisa el riel y reintenta en modo Manual.</div></div>
+              </div>
+            </sc-if>
+          </section>
+        </div>
+
+        <section style="background:var(--card); backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--cardBorder); border-radius:32px; padding:clamp(18px,3vw,26px); box-shadow:var(--shadow); display:flex; flex-direction:column; gap:18px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+            <div><h2 style="margin:0; font-family:'Unbounded',sans-serif; font-size:18px; font-weight:600;">Modo Simulación</h2><div style="font-size:13.5px; color:var(--ink2); margin-top:4px;">Fuerza valores y fallos para ver cómo reacciona el sistema sin hardware.</div></div>
+            <button onClick="{{ toggleSim }}" style="display:flex; align-items:center; gap:10px; padding:6px 6px 6px 16px; min-height:48px; border-radius:999px; border:1px solid var(--line); background:var(--chip); color:var(--ink); cursor:pointer; font-weight:700;">{{ simLabel }}<span style="width:56px; height:34px; border-radius:999px; background:{{ simTrack }}; position:relative; transition:background .2s;"><span style="position:absolute; top:4px; left:{{ simKnob }}; width:26px; height:26px; border-radius:50%; background:#ecffb6; box-shadow:0 1px 4px rgba(0,0,0,.25); transition:left .2s;"></span></span></button>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%,260px),1fr)); gap:18px; opacity:{{ simOpacity }}; pointer-events:{{ simEvents }}; transition:opacity .2s;">
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.12em; color:var(--ink2);">FORZAR LLUVIA</div>
+              <div style="display:flex; padding:4px; border-radius:999px; background:var(--chip); gap:2px;">
+                <sc-for list="{{ rainOpts }}" as="o" hint-placeholder-count="3">
+                  <button onClick="{{ o.pick }}" style="flex:1; border:none; cursor:pointer; padding:10px; min-height:44px; border-radius:999px; font-size:14px; font-weight:700; background:{{ o.bg }}; color:{{ o.fg }};">{{ o.label }}</button>
+                </sc-for>
+              </div>
+              <div style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.12em; color:var(--ink2); margin-top:8px;">FALLOS</div>
+              <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                <sc-for list="{{ faults }}" as="f" hint-placeholder-count="5">
+                  <button onClick="{{ f.toggle }}" style="padding:10px 14px; min-height:44px; border-radius:999px; border:1px solid {{ f.border }}; background:{{ f.bg }}; color:{{ f.fg }}; cursor:pointer; font-size:13px; font-weight:700;">{{ f.label }}</button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:16px;">
+              <sc-for list="{{ simSliders }}" as="s" hint-placeholder-count="3">
+                <label style="display:flex; flex-direction:column; gap:6px;">
+                  <span style="display:flex; justify-content:space-between; font-size:14px; font-weight:600;"><span>{{ s.label }}</span><span style="font-family:'JetBrains Mono',monospace;">{{ s.display }}</span></span>
+                  <input type="range" min="{{ s.min }}" max="{{ s.max }}" step="{{ s.step }}" value="{{ s.value }}" onChange="{{ s.onChange }}" style="width:100%; accent-color:var(--hi); height:44px;">
+                </label>
+              </sc-for>
+            </div>
+          </div>
+        </section>
+      </div>
+    </sc-if>
+
+    <!-- HISTORIAL -->
+    <sc-if value="{{ isHistorial }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex; flex-direction:column; gap:16px; animation:rise .4s ease both;">
+        <section style="background:var(--card); backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--cardBorder); border-radius:32px; padding:clamp(18px,3vw,26px); box-shadow:var(--shadow); display:flex; flex-direction:column; gap:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+            <h2 style="margin:0; font-family:'Unbounded',sans-serif; font-size:18px; font-weight:600;">Historial en tiempo real</h2>
+            <div style="display:flex; padding:4px; border-radius:999px; background:var(--chip); gap:2px;">
+              <sc-for list="{{ ranges }}" as="r" hint-placeholder-count="3">
+                <button onClick="{{ r.pick }}" style="border:none; cursor:pointer; padding:9px 16px; min-height:40px; border-radius:999px; font-size:13px; font-weight:700; font-family:'JetBrains Mono',monospace; background:{{ r.bg }}; color:{{ r.fg }};">{{ r.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex; gap:14px; flex-wrap:wrap; font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--ink2);">
+            <span style="display:flex; align-items:center; gap:6px; white-space:nowrap;"><span style="width:10px; height:10px; border-radius:50%; background:var(--ok);"></span>A · cubierta abierta</span>
+            <span style="display:flex; align-items:center; gap:6px; white-space:nowrap;"><span style="width:10px; height:10px; border-radius:50%; background:var(--ink);"></span>C · cubierta cerrada</span>
+            <span style="display:flex; align-items:center; gap:6px; white-space:nowrap;"><span style="width:14px; height:0; border-top:2px dashed var(--crit);"></span>umbral</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <sc-for list="{{ charts }}" as="c" hint-placeholder-count="4">
+              <div style="display:flex; flex-direction:column; gap:6px; padding:10px 0; border-top:1px solid var(--line);">
+                <div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px; flex-wrap:wrap;">
+                  <span style="font-weight:700; font-size:14px;">{{ c.name }}</span>
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink2);">{{ c.stats }}</span>
+                </div>
+                <div onPointerMove="{{ onChartMove }}" onPointerDown="{{ onChartMove }}" onPointerLeave="{{ onChartLeave }}" style="position:relative; height:96px; touch-action:pan-y; cursor:crosshair;">
+                  <svg viewBox="0 0 1000 100" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%; overflow:visible;">
+                    <path d="{{ c.area }}" style="fill:var(--hi); opacity:.12;"></path>
+                    <path d="{{ c.path }}" style="fill:none; stroke:var(--hi); stroke-width:2; vector-effect:non-scaling-stroke; stroke-linejoin:round;"></path>
+                  </svg>
+                  <sc-if value="{{ c.hasThr }}" hint-placeholder-val="{{ false }}"><div style="position:absolute; left:0; right:0; top:{{ c.thrTop }}; border-top:2px dashed var(--crit); opacity:.8;"></div></sc-if>
+                  <sc-for list="{{ markers }}" as="m" hint-placeholder-count="0">
+                    <div style="position:absolute; top:0; bottom:0; left:{{ m.left }}; width:0; border-left:1px solid {{ m.color }}; opacity:.55;"></div>
+                  </sc-for>
+                  <sc-if value="{{ hovering }}" hint-placeholder-val="{{ false }}">
+                    <div style="position:absolute; top:0; bottom:0; left:{{ hoverLeft }}; width:0; border-left:2px solid var(--ink);"></div>
+                    <div style="position:absolute; top:{{ c.hoverTop }}; left:{{ hoverLeft }}; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 2px #00545f;"></div>
+                    <div style="position:absolute; top:-4px; left:{{ hoverLeft }}; transform:{{ tipShift }}; padding:4px 9px; border-radius:10px; background:var(--solid); color:var(--solidInk); font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; white-space:nowrap; pointer-events:none;">{{ c.hoverVal }}</div>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-for>
+            <div style="position:relative; height:26px; border-top:1px solid var(--line);">
+              <sc-for list="{{ markers }}" as="m" hint-placeholder-count="0">
+                <span style="position:absolute; top:5px; left:{{ m.left }}; transform:translateX(-50%); width:18px; height:18px; border-radius:50%; background:{{ m.color }}; color:{{ m.fg }}; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center;">{{ m.label }}</span>
+              </sc-for>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--ink2);"><span>{{ axisStart }}</span><span>{{ hoverTime }}</span><span>ahora</span></div>
+          </div>
+        </section>
+
+        <section style="background:var(--card); backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--cardBorder); border-radius:32px; padding:clamp(18px,3vw,26px); box-shadow:var(--shadow); display:flex; flex-direction:column; gap:14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+            <h2 style="margin:0; font-family:'Unbounded',sans-serif; font-size:18px; font-weight:600;">Registro de eventos</h2>
+            <button onClick="{{ exportCsv }}" style="padding:10px 18px; min-height:44px; border-radius:999px; border:none; background:#d6fb00; color:#00545f; font-weight:700; cursor:pointer;">Exportar CSV</button>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <sc-for list="{{ filters }}" as="f" hint-placeholder-count="4">
+              <button onClick="{{ f.pick }}" style="padding:9px 16px; min-height:40px; border-radius:999px; border:1px solid var(--line); background:{{ f.bg }}; color:{{ f.fg }}; cursor:pointer; font-size:13px; font-weight:700;">{{ f.label }}</button>
+            </sc-for>
+          </div>
+          <div style="display:flex; flex-direction:column;">
+            <sc-for list="{{ logRows }}" as="ev" hint-placeholder-count="8">
+              <div style="display:grid; grid-template-columns:minmax(76px,auto) 26px minmax(0,1fr); gap:12px; align-items:start; padding:12px 0; border-top:1px solid var(--line);">
+                <div style="font-family:'JetBrains Mono',monospace; font-size:12.5px; line-height:1.4;"><div style="font-weight:700;">{{ ev.hora }}</div><div style="color:var(--ink2);">{{ ev.dia }}</div></div>
+                <span style="width:26px; height:26px; border-radius:50%; background:{{ ev.bg }}; color:{{ ev.fg }}; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700;">{{ ev.icon }}</span>
+                <div style="min-width:0;"><div style="font-weight:700; font-size:14.5px;">{{ ev.msg }}</div><div style="font-size:13px; color:var(--ink2); text-wrap:pretty;">{{ ev.causa }}</div></div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink2);">{{ logCount }}</div>
+        </section>
+      </div>
+    </sc-if>
+
+    <!-- CONFIGURACIÓN -->
+    <sc-if value="{{ isConfig }}" hint-placeholder-val="{{ false }}">
+      <section style="background:var(--card); backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--cardBorder); border-radius:32px; padding:clamp(18px,3vw,28px); box-shadow:var(--shadow); display:flex; flex-direction:column; gap:22px; animation:rise .4s ease both;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+          <div><h2 style="margin:0; font-family:'Unbounded',sans-serif; font-size:18px; font-weight:600;">Umbrales de operación</h2><div style="font-size:13.5px; color:var(--ink2); margin-top:4px;">Se aplican en modo Automático después de guardarlos en el ESP32.</div></div>
+          <sc-if value="{{ dirty }}" hint-placeholder-val="{{ false }}"><span style="padding:6px 12px; border-radius:999px; background:var(--warn); color:#00545f; font-size:12px; font-weight:700;">▲ Cambios sin guardar</span></sc-if>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%,320px),1fr)); gap:14px;">
+          <sc-for list="{{ thSliders }}" as="s" hint-placeholder-count="6">
+            <label style="display:flex; flex-direction:column; gap:8px; padding:18px; border-radius:22px; background:var(--chip); border:1px solid {{ s.border }};">
+              <span style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;"><span style="font-weight:700; font-size:15px;">{{ s.label }}</span><span style="font-family:'Unbounded',sans-serif; font-size:24px; font-weight:600;">{{ s.display }}</span></span>
+              <input type="range" min="{{ s.min }}" max="{{ s.max }}" step="{{ s.step }}" value="{{ s.value }}" onChange="{{ s.onChange }}" style="width:100%; accent-color:var(--hi); height:44px;">
+              <span style="font-size:12.5px; color:var(--ink2); text-wrap:pretty;">{{ s.help }}</span>
+            </label>
+          </sc-for>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button onClick="{{ saveTh }}" style="padding:14px 26px; min-height:52px; border-radius:999px; border:none; background:#d6fb00; color:#00545f; font-family:'Unbounded',sans-serif; font-weight:600; font-size:15px; cursor:pointer; box-shadow:0 0 0 1px rgba(0,84,95,.2);">Guardar en ESP32</button>
+          <button onClick="{{ resetTh }}" style="padding:14px 22px; min-height:52px; border-radius:999px; border:1px solid var(--line); background:var(--chip); color:var(--ink); font-weight:700; font-size:14px; cursor:pointer;">Restaurar valores por defecto</button>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink2); padding-top:12px; border-top:1px solid var(--line);">{{ thSaved }}</div>
+      </section>
+    </sc-if>
+
+    <!-- CONEXIONES -->
+    <sc-if value="{{ isConex }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex; flex-direction:column; gap:16px; animation:rise .4s ease both;">
+        <section style="background:var(--card); backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--cardBorder); border-radius:32px; padding:clamp(18px,3vw,26px); box-shadow:var(--shadow); display:flex; flex-direction:column; gap:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;"><h2 style="margin:0; font-family:'Unbounded',sans-serif; font-size:18px; font-weight:600;">Diagrama de conexión</h2><span style="font-size:13px; color:var(--ink2);">Toca un componente para ver su pin y estado.</span></div>
+          <div class="swipe-hint" style="font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700;">Desliza → DRV8833, motor, OLED y fuente</div>
+          <div style="overflow-x:auto; margin:0 -6px; padding:6px;">
+            <div style="position:relative; width:100%; min-width:700px; aspect-ratio:16/8.5;">
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%;">
+                <sc-for list="{{ wires }}" as="w" hint-placeholder-count="0">
+                  <polyline points="{{ w.pts }}" style="fill:none; stroke:{{ w.color }}; stroke-width:{{ w.width }}; vector-effect:non-scaling-stroke; stroke-dasharray:{{ w.dash }};"></polyline>
+                </sc-for>
+              </svg>
+              <div style="position:absolute; left:36%; top:3%; width:28%; height:94%; border-radius:22px; background:var(--solid); color:var(--solidInk); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; box-shadow:var(--shadow);">
+                <div style="position:absolute; left:6px; top:8%; bottom:8%; width:6px; background:radial-gradient(circle, var(--solidInk) 1.6px, rgba(0,0,0,0) 2px) 0 0/6px 11px; opacity:.5;"></div>
+                <div style="position:absolute; right:6px; top:8%; bottom:8%; width:6px; background:radial-gradient(circle, var(--solidInk) 1.6px, rgba(0,0,0,0) 2px) 0 0/6px 11px; opacity:.5;"></div>
+                <div style="width:46%; aspect-ratio:1; border-radius:10px; border:2px solid var(--solidInk); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:10px; text-align:center; opacity:.9;">ESP-WROOM-32</div>
+                <div style="font-family:'Unbounded',sans-serif; font-size:22px; font-weight:600;">ESP32</div>
+                <div style="font-family:'JetBrains Mono',monospace; font-size:11px; opacity:.85;">DevKit V1 · {{ espState }}</div>
+              </div>
+              <sc-for list="{{ pinTags }}" as="p" hint-placeholder-count="0">
+                <span style="position:absolute; left:{{ p.left }}; top:{{ p.top }}; transform:translate(-50%,-50%); padding:2px 6px; border-radius:6px; background:var(--card); border:1px solid var(--line); font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; white-space:nowrap;">{{ p.label }}</span>
+              </sc-for>
+              <sc-for list="{{ comps }}" as="c" hint-placeholder-count="10">
+                <button onClick="{{ c.pick }}" style="position:absolute; left:{{ c.left }}; top:{{ c.top }}; width:24%; height:14%; border-radius:16px; border:1px solid {{ c.border }}; background:{{ c.bg }}; color:{{ c.fg }}; cursor:pointer; padding:6px 12px; display:flex; align-items:center; gap:10px; text-align:left; backdrop-filter:blur(12px); transition:background .2s;">
+                  <span style="flex:none; width:12px; height:12px; border-radius:50%; background:{{ c.led }}; box-shadow:0 0 0 2px rgba(255,255,255,.35);"></span>
+                  <span style="display:flex; flex-direction:column; min-width:0;"><span style="font-weight:700; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ c.name }}</span><span style="font-family:'JetBrains Mono',monospace; font-size:10.5px; opacity:.85; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ c.live }}</span></span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex; gap:16px; flex-wrap:wrap; padding:18px; border-radius:22px; background:var(--chip);">
+            <div style="flex:1 1 220px; display:flex; flex-direction:column; gap:4px;">
+              <div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.14em; color:var(--ink2);">COMPONENTE</div>
+              <div style="font-family:'Unbounded',sans-serif; font-size:20px; font-weight:600;">{{ selComp.name }}</div>
+              <div style="font-size:13px; color:var(--ink2);">{{ selComp.sub }}</div>
+            </div>
+            <div style="flex:1 1 220px; display:flex; flex-direction:column; gap:6px;">
+              <div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.14em; color:var(--ink2);">PINES</div>
+              <sc-for list="{{ selPins }}" as="p" hint-placeholder-count="1">
+                <div style="display:flex; gap:10px; font-family:'JetBrains Mono',monospace; font-size:13px;"><span style="min-width:56px; font-weight:700;">{{ p.a }}</span><span>{{ p.b }}</span></div>
+              </sc-for>
+            </div>
+            <div style="flex:1.4 1 260px; display:flex; flex-direction:column; gap:6px;">
+              <div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.14em; color:var(--ink2);">ESTADO EN VIVO</div>
+              <div style="font-family:'JetBrains Mono',monospace; font-size:17px; font-weight:700;">{{ selComp.live }}</div>
+              <div style="font-size:13px; color:var(--ink2); text-wrap:pretty;">{{ selComp.note }}</div>
+            </div>
+          </div>
+        </section>
+
+        <div style="display:flex; flex-wrap:wrap; gap:16px;">
+          <section style="flex:1 1 320px; min-width:0; background:var(--card); backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--cardBorder); border-radius:28px; padding:22px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;"><h2 style="margin:0; font-family:'Unbounded',sans-serif; font-size:16px; font-weight:600;">Conectividad ESP32</h2><span style="display:flex; gap:6px; padding:5px 11px; border-radius:999px; background:{{ wifiChip.bg }}; color:{{ wifiChip.fg }}; font-size:12px; font-weight:700;">{{ wifiChip.icon }} {{ wifiChip.label }}</span></div>
+            <div style="display:flex; align-items:flex-end; gap:14px;">
+              <div style="display:flex; align-items:flex-end; gap:5px; height:44px;"><sc-for list="{{ barsBig }}" as="b" hint-placeholder-count="4"><span style="width:11px; border-radius:3px; height:{{ b.h }}; background:var(--hi); opacity:{{ b.op }};"></span></sc-for></div>
+              <div><div style="font-family:'Unbounded',sans-serif; font-size:30px; font-weight:600; letter-spacing:-0.02em;">{{ rssiLabel }}</div><div style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink2);">{{ ssid }}</div></div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+              <sc-for list="{{ netRows }}" as="r" hint-placeholder-count="4">
+                <div style="padding:12px; border-radius:16px; background:var(--chip);"><div style="font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:.1em; color:var(--ink2);">{{ r.k }}</div><div style="font-family:'JetBrains Mono',monospace; font-size:14.5px; font-weight:700; margin-top:4px;">{{ r.v }}</div></div>
+              </sc-for>
+            </div>
+          </section>
+          <section style="flex:1 1 320px; min-width:0; background:var(--card); backdrop-filter:blur(22px) saturate(1.4); border:1px solid var(--cardBorder); border-radius:28px; padding:22px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;"><h2 style="margin:0; font-family:'Unbounded',sans-serif; font-size:16px; font-weight:600;">Estado JSON</h2><span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink2);">GET /api/estado · cada 2 s</span></div>
+            <pre style="margin:0; padding:16px; border-radius:18px; background:#00353c; color:#ecffb6; font-family:'JetBrains Mono',monospace; font-size:12px; line-height:1.55; overflow:auto; max-height:340px;">{{ jsonText }}</pre>
+          </section>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+      <div style="position:fixed; left:50%; bottom:24px; transform:translateX(-50%); z-index:30; padding:14px 22px; border-radius:999px; background:var(--solid); color:var(--solidInk); font-weight:700; font-size:14px; box-shadow:0 12px 30px -10px rgba(0,0,0,.45); animation:rise .25s ease both; max-width:calc(100vw - 32px); text-align:center;">{{ toastMsg }}</div>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;tema&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;claro&quot;,&quot;oscuro&quot;],&quot;default&quot;:&quot;claro&quot;,&quot;tsType&quot;:&quot;'claro'|'oscuro'&quot;},&quot;grano&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:0,&quot;max&quot;:0.7,&quot;step&quot;:0.02,&quot;default&quot;:0.32,&quot;tsType&quot;:&quot;number&quot;},&quot;fondoAnimado&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const DEF = { humMax: 80, tempMax: 40, luzMin: 25, lluviaSens: 70, motorMax: 12, pwm: 75 };
+// Fuente 5x7 de Adafruit GFX (la que usa el SSD1306 por defecto): 5 columnas en hex por carácter, desde el espacio hasta la z.
+const FONT5X7 = '0000000000' + '00005F0000' + '0007000700' + '147F147F14' + '242A7F2A12' + '2313086462' + '3649552250' + '0008070300' + '001C224100' + '0041221C00' + '2A1C7F1C2A' + '08083E0808' + '0080703000' + '0808080808' + '0000606000' + '2010080402'
+  + '3E5149453E' + '00427F4000' + '7249494946' + '2141494D33' + '1814127F10' + '2745454539' + '3C4A494931' + '4121110907' + '3649494936' + '464949291E' + '0000140000' + '0040340000' + '0008142241' + '1414141414' + '0041221408' + '0201590906'
+  + '3E415D594E' + '7C1211127C' + '7F49494936' + '3E41414122' + '7F4141413E' + '7F49494941' + '7F09090901' + '3E41415173' + '7F0808087F' + '00417F4100' + '2040413F01' + '7F08142241' + '7F40404040' + '7F021C027F' + '7F0408107F' + '3E4141413E'
+  + '7F09090906' + '3E4151215E' + '7F09192946' + '2649494932' + '03017F0103' + '3F4040403F' + '1F2040201F' + '3F4038403F' + '6314081463' + '0304780403' + '6159494D43' + '007F414141' + '0204081020' + '004141417F' + '0402010204' + '4040404040'
+  + '0003070800' + '2054547840' + '7F28444438' + '3844444428' + '384444287F' + '3854545418' + '00087E0902' + '18A4A49C78' + '7F08040478' + '00447D4000' + '2040403D00' + '7F10284400' + '00417F4000' + '7C04780478' + '7C08040478' + '3844444438'
+  + 'FC18242418' + '18242418FC' + '7C08040408' + '4854545424' + '04043F4424' + '3C4040207C' + '1C2040201C' + '3C4030403C' + '4428102844' + '4C9090907C' + '4464544C44';
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const r1 = v => Math.round(v * 10) / 10;
+const sunAt = h => Math.max(0, Math.sin((h - 6) / 12 * Math.PI));
+const rainThr = th => Math.round(4095 * th.lluviaSens / 100 * 0.9);
+const rainLabel = (raw, th) => { const t = rainThr(th); return raw < t * 0.55 ? 'Lluvia' : raw < t ? 'Llovizna' : 'Seco'; };
+const luzLabel = p => p < 8 ? 'Noche' : p < 45 ? 'Nublado' : 'Soleado';
+const hhmm = t => new Date(t).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', hour12: false });
+const hhmmss = t => new Date(t).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+let EVN = 0;
+const mkEv = (t, tipo, msg, causa) => ({ id: 'e' + (EVN++), t, tipo, msg, causa: causa || '' });
+const fin = e => { e.cubierta = e.error ? 'error' : e.motor.dir !== 'detenido' ? 'moviendo' : e.pos >= 100 ? 'cerrada' : e.pos <= 0 ? 'abierta' : 'parcial'; return e; };
+
+function decide(p, th, closed) {
+  if (rainLabel(p.lluvia, th) !== 'Seco') return { closed: true, razon: 'Cerrado por lluvia' };
+  if (p.hum != null && p.hum > th.humMax) return { closed: true, razon: `Cerrado por humedad > ${th.humMax}%` };
+  if (p.luz < th.luzMin) return { closed: true, razon: 'Cerrado por poca luz (noche)' };
+  if (p.temp != null && p.temp > th.tempMax) return { closed: true, razon: `Cerrado por temperatura > ${th.tempMax} °C` };
+  if (closed && ((p.hum != null && p.hum > th.humMax - 5) || p.luz < th.luzMin + 5)) return { closed: true, razon: null };
+  return { closed: false, razon: 'Abierto por sol y humedad baja' };
+}
+
+function computeAlerts(e, th) {
+  const a = []; const lab = rainLabel(e.lluvia, th);
+  if (lab !== 'Seco' && e.pos < 100) a.push({ key: 'rain-open', sev: 'crit', title: 'Lluvia con cubierta abierta', detail: e.modo === 'auto' ? 'Cerrando automáticamente.' : 'Modo Manual: cierra la cubierta.' });
+  else if (lab !== 'Seco') a.push({ key: 'rain', sev: 'warn', title: 'Lluvia detectada', detail: `${lab} · AO ${e.lluvia} · cubierta cerrada` });
+  if (e.error === 'atasco') a.push({ key: 'jam', sev: 'crit', title: 'Atasco del motor', detail: 'Superó el tiempo máximo sin llegar al final de carrera. Revisa el riel y reintenta en Manual.' });
+  if (e.error === 'fc') a.push({ key: 'fc', sev: 'crit', title: 'Fallo de finales de carrera', detail: 'Ambos microswitch presionados a la vez. Motor bloqueado.' });
+  if (!e.dht_ok) a.push({ key: 'dht', sev: 'warn', title: 'DHT22 sin lectura', detail: 'Revisa el cable de datos (GPIO4). Decisiones por humedad en pausa.' });
+  if (!e.wifi.ok) a.push({ key: 'wifi', sev: 'warn', title: 'WiFi desconectado', detail: 'El ESP32 sigue operando en local. Reintentando conexión.' });
+  else if (e.wifi.rssi < -75) a.push({ key: 'wifiweak', sev: 'warn', title: 'Señal WiFi débil', detail: `${e.wifi.rssi} dBm` });
+  if (e.v5 < 4.7 || e.v6 < 5.6) a.push({ key: 'volt', sev: e.v6 < 5.4 ? 'crit' : 'warn', title: 'Voltaje bajo', detail: `Entrada ${e.v5.toFixed(2)} V · Motor ${e.v6.toFixed(2)} V` });
+  if (e.hum != null && e.hum > th.humMax && lab === 'Seco') a.push({ key: 'hum', sev: 'info', title: 'Humedad sobre el umbral', detail: `${e.hum.toFixed(0)} % > ${th.humMax} %` });
+  const o = { crit: 0, warn: 1, info: 2 };
+  return a.sort((x, y) => o[x.sev] - o[y.sev]);
+}
+
+const SEV = {
+  ok: { bg: 'var(--ok)', fg: '#fff', icon: '✓' },
+  warn: { bg: 'var(--warn)', fg: '#00545f', icon: '▲' },
+  crit: { bg: 'var(--crit)', fg: '#fff', icon: '✕' },
+  info: { bg: 'var(--solid)', fg: 'var(--solidInk)', icon: 'i' },
+};
+
+const COMPS = [
+  { id: 'dht', name: 'DHT22', sub: 'Temperatura y humedad', side: 'L', y: 5, pins: [['DATA', 'GPIO4']], tag: 'GPIO4', note: 'Mide el aire, no la humedad del grano. Resistencia pull-up de 10 kΩ en DATA.' },
+  { id: 'ldr', name: 'LDR', sub: 'Divisor con 10 kΩ', side: 'L', y: 24, pins: [['AO', 'GPIO34 · ADC1']], tag: 'GPIO34', note: 'En ADC1: funciona con WiFi activo (los ADC2 no).' },
+  { id: 'rain', name: 'Sensor de lluvia', sub: 'Placa + comparador', side: 'L', y: 43, pins: [['AO', 'GPIO35 · ADC1'], ['DO', 'GPIO27']], tag: '35 · 27', note: 'AO en ADC1. DO es la salida del comparador: 0 = mojado.' },
+  { id: 'fca', name: 'FC abierto', sub: 'Microswitch', side: 'L', y: 62, pins: [['NO', 'GPIO25 · INPUT_PULLUP']], tag: 'GPIO25', note: 'Usa la resistencia de 10 kΩ como pull-up o INPUT_PULLUP interno.' },
+  { id: 'fcc', name: 'FC cerrado', sub: 'Microswitch', side: 'L', y: 81, pins: [['NO', 'GPIO26 · INPUT_PULLUP']], tag: 'GPIO26', note: 'Usa la resistencia de 10 kΩ como pull-up o INPUT_PULLUP interno.' },
+  { id: 'drv', name: 'DRV8833', sub: 'Puente H', side: 'R', y: 5, pins: [['AIN1', 'GPIO18 · PWM'], ['AIN2', 'GPIO19 · PWM']], tag: '18 · 19', note: 'AIN1/AIN2 con PWM por LEDC. VM recibe 6 V del elevador.' },
+  { id: 'motor', name: 'Motorreductor N20', sub: '6 V · vía DRV8833', side: 'R', y: 24, pins: [['M+ / M−', 'AOUT1 / AOUT2']], tag: null, note: 'Se conecta al DRV8833, no directo al ESP32.' },
+  { id: 'oled', name: 'OLED SSD1306', sub: '0.96" · I²C 0x3C', side: 'R', y: 43, pins: [['SDA', 'GPIO21'], ['SCL', 'GPIO22']], tag: '21 · 22', note: 'Pantalla monocroma 128×64. Su espejo está en Sensores.' },
+  { id: 'adc', name: 'Divisores de tensión', sub: '5 V y 6 V → 3,3 V', side: 'R', y: 62, pins: [['V5', 'GPIO32 · ADC1'], ['V6', 'GPIO33 · ADC1']], tag: '32 · 33', note: 'Necesarios: el ESP32 solo tolera 3,3 V en sus pines.' },
+  { id: 'pwr', name: 'Fuente 5 V + elevador', sub: 'Adaptador → 6 V', side: 'R', y: 81, pins: [['5V', 'VIN (ESP32)'], ['6V', 'VM (DRV8833)']], tag: 'VIN', note: 'Adaptador de 5 V alimenta el ESP32; el elevador sube a 6 V para el motor.' },
+];
+
+class Component extends DCLogic {
+  state = this.init();
+
+  init() {
+    const th = { ...DEF }; const now = Date.now(); const N = 1440;
+    let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const rs = N - 330, re = N - 282; const hist = [];
+    for (let i = 0; i < N; i++) {
+      const t = now - (N - 1 - i) * 60000; const d = new Date(t); const h = d.getHours() + d.getMinutes() / 60;
+      const sn = sunAt(h); const rain = i >= rs && i < re; const heavy = rain && i > rs + 8 && i < re - 10;
+      const cloud = clamp(0.82 + 0.18 * Math.sin(i / 41) - (rain ? 0.55 : 0), 0.15, 1);
+      hist.push({ t, temp: r1(21.5 + 9.5 * sn * (rain ? 0.65 : 1) + (rnd() - .5) * .5), hum: r1(clamp(93 - 38 * sn + (rain ? 20 : 0) + (rnd() - .5) * 2, 30, 99)), luz: r1(clamp(sn * 96 * cloud + rnd() * 2, 0, 100)), lluvia: Math.round(rain ? (heavy ? 820 : 2150) + rnd() * 220 : 3880 + rnd() * 180) });
+    }
+    const events = []; let closed = null, lastRain = 'Seco', ciclos = 214, razon = '', razonT = now;
+    const startT = hist[0].t - 3600000 * 3.4;
+    events.push(mkEv(startT, 'info', 'ESP32 iniciado', 'Conectado a Finca-Cacao'));
+    hist.forEach((p, i) => {
+      const lab = rainLabel(p.lluvia, th);
+      if (lab !== lastRain) { events.push(mkEv(p.t, 'lluvia', lastRain === 'Seco' ? 'Lluvia detectada' : lab === 'Seco' ? 'Lluvia terminó' : `Intensidad: ${lab}`, lab === 'Seco' ? 'Sensor seco' : `${lab} · AO ${p.lluvia}`)); lastRain = lab; }
+      if (i === N - 700) events.push(mkEv(p.t, 'alerta', 'Señal WiFi débil', 'RSSI −79 dBm'));
+      const d = decide(p, th, closed);
+      if (closed === null) { closed = d.closed; razon = d.razon || 'Cerrado por poca luz (noche)'; return; }
+      if (d.closed !== closed) { closed = d.closed; ciclos++; razon = d.razon; razonT = p.t + 9000; events.push(mkEv(p.t + 9000, 'motor', closed ? 'Cubierta cerrada' : 'Cubierta abierta', `${d.razon} · 9.3 s`)); }
+    });
+    events.sort((a, b) => b.t - a.t);
+    const L = hist[N - 1];
+    const est = fin({ temp: L.temp, hum: L.hum, luz: Math.round(L.luz * 40.95), luz_pct: Math.round(L.luz), lluvia: L.lluvia, lluvia_do: 1, cubierta: '', pos: closed ? 100 : 0, fc_abierto: !closed, fc_cerrado: closed, motor: { dir: 'detenido', pwm: th.pwm, t_run: 9.3, ciclos }, v5: 5.04, v6: 6.01, fuente: 'ok', wifi: { ssid: 'Finca-Cacao', rssi: -61, ip: '192.168.1.47', ok: true }, uptime: Math.round((now - startT) / 1000), heap: 183420, modo: 'auto', razon, razon_t: razonT, error: null, dht_ok: true, ts: now });
+    const p = this.props || {};
+    return { est, phys: { temp: L.temp, hum: L.hum, luz: L.luz, lluvia: L.lluvia }, hist, events, th, thDraft: { ...th }, thSavedAt: null, rainLab: rainLabel(L.lluvia, th), alertKeys: [],
+      sim: { on: false, lluvia: 'Seco', temp: 30, hum: 60, luz: 80, atasco: false, fcFault: false, dhtFail: false, wifiOff: false, lowV: false },
+      tab: 'resumen', theme: p.tema === 'oscuro' ? 'dark' : 'light', range: 360, hover: null, filter: 'todos', sel: 'rain', toast: null, flash: null, ticks: 0 };
+  }
+
+  componentDidMount() {
+    this.applyTheme();
+    // Para conectar el ESP32 real: reemplaza tick() por fetch('/api/estado') o un WebSocket que entregue el mismo JSON (est).
+    this.t1 = setInterval(() => this.tick(), 2000);
+    this.t2 = setInterval(() => this.motorStep(), 200);
+    this.drawOled();
+  }
+  componentWillUnmount() { clearInterval(this.t1); clearInterval(this.t2); clearTimeout(this.tt); }
+  componentDidUpdate(pp) {
+    if (pp.tema !== this.props.tema && this.props.tema) this.setState({ theme: this.props.tema === 'oscuro' ? 'dark' : 'light' });
+    this.applyTheme(); this.drawOled();
+  }
+  applyTheme() { document.documentElement.setAttribute('data-theme', this.state.theme); }
+
+  toast(msg) { clearTimeout(this.tt); this.setState({ toast: msg }); this.tt = setTimeout(() => this.setState({ toast: null }), 2600); }
+
+  tick() {
+    this.setState(s => {
+      const now = Date.now(); const sim = s.sim; const th = s.th; const d = new Date(now);
+      const sn = sunAt(d.getHours() + d.getMinutes() / 60); const rnd = Math.random;
+      const p = { ...s.phys };
+      let tT = 21.5 + 9.5 * sn, tH = clamp(93 - 38 * sn, 30, 99), tL = sn * 92, tR = 3930;
+      if (sim.on) { tT = sim.temp; tH = sim.hum; tL = sim.luz; tR = sim.lluvia === 'Lluvia' ? 820 : sim.lluvia === 'Llovizna' ? 2150 : 3930; }
+      p.temp = r1(p.temp + (tT - p.temp) * .3 + (rnd() - .5) * .15);
+      p.hum = r1(clamp(p.hum + (tH - p.hum) * .3 + (rnd() - .5) * .4, 0, 100));
+      p.luz = r1(clamp(p.luz + (tL - p.luz) * .35 + (rnd() - .5) * 1.2, 0, 100));
+      p.lluvia = Math.round(clamp(p.lluvia + (tR - p.lluvia) * .45 + (rnd() - .5) * 60, 0, 4095));
+      const e = { ...s.est, motor: { ...s.est.motor }, wifi: { ...s.est.wifi } };
+      const f = sim.on ? sim : {};
+      e.dht_ok = !f.dhtFail; e.temp = e.dht_ok ? p.temp : null; e.hum = e.dht_ok ? p.hum : null;
+      e.luz = Math.round(p.luz * 40.95); e.luz_pct = Math.round(p.luz); e.lluvia = p.lluvia; e.lluvia_do = p.lluvia < rainThr(th) ? 0 : 1;
+      const moving = e.motor.dir !== 'detenido';
+      e.v5 = +(f.lowV ? 4.41 + rnd() * .06 : 5.02 + rnd() * .05).toFixed(2);
+      e.v6 = +(f.lowV ? 5.21 + rnd() * .08 : (moving ? 5.86 : 6.0) + rnd() * .05).toFixed(2);
+      e.fuente = e.v5 < 4.7 || e.v6 < 5.6 ? 'baja' : 'ok';
+      if (f.wifiOff) e.wifi = { ssid: 'Finca-Cacao', rssi: null, ip: null, ok: false };
+      else { const pr = e.wifi.rssi ?? -62; e.wifi = { ssid: 'Finca-Cacao', ip: '192.168.1.47', ok: true, rssi: Math.round(clamp(pr + (rnd() - .5) * 4 + (-62 - pr) * .15, -88, -45)) }; }
+      e.uptime += 2; e.heap = Math.round(183000 + (rnd() - .5) * 2400 - (moving ? 1800 : 0)); e.ts = now;
+      let events = s.events;
+      if (f.fcFault) { e.fc_abierto = true; e.fc_cerrado = true; if (e.error !== 'fc') { e.error = 'fc'; e.motor.dir = 'detenido'; e.razon = 'Detenido: ambos finales de carrera activos'; e.razon_t = now; } }
+      else { e.fc_abierto = e.pos <= 0; e.fc_cerrado = e.pos >= 100; if (e.error === 'fc') e.error = null; }
+      const lab = rainLabel(e.lluvia, th);
+      if (lab !== s.rainLab) events = [mkEv(now, 'lluvia', s.rainLab === 'Seco' ? 'Lluvia detectada' : lab === 'Seco' ? 'Lluvia terminó' : `Intensidad: ${lab}`, lab === 'Seco' ? 'Sensor seco' : `${lab} · AO ${e.lluvia}`), ...events];
+      if (e.modo === 'auto' && !e.error && e.motor.dir === 'detenido') {
+        const dd = decide({ temp: e.temp, hum: e.hum, luz: e.luz_pct, lluvia: e.lluvia }, th, e.pos >= 100);
+        if ((dd.closed && e.pos < 100) || (!dd.closed && e.pos > 0)) {
+          e.motor.dir = dd.closed ? 'cerrar' : 'abrir'; e.motor.t_run = 0; e.motor.pwm = th.pwm;
+          e.razon = dd.razon || (dd.closed ? 'Cierre automático' : 'Apertura automática'); e.razon_t = now;
+        }
+      }
+      fin(e);
+      const al = computeAlerts(e, th); const keys = al.filter(a => a.sev !== 'info').map(a => a.key);
+      al.filter(a => a.sev !== 'info' && !s.alertKeys.includes(a.key) && a.key !== 'jam').forEach(a => { events = [mkEv(now, 'alerta', a.title, a.detail), ...events]; });
+      const hist = s.hist.slice(); const pt = { t: now, temp: e.temp ?? hist[hist.length - 1].temp, hum: e.hum ?? hist[hist.length - 1].hum, luz: p.luz, lluvia: e.lluvia };
+      if (s.ticks % 30 === 29) { hist.push(pt); hist.shift(); } else hist[hist.length - 1] = pt;
+      return { est: e, phys: p, events, rainLab: lab, alertKeys: keys, hist, ticks: s.ticks + 1 };
+    });
+  }
+
+  motorStep() {
+    if (this.state.est.motor.dir === 'detenido') return;
+    this.setState(s => {
+      const e = { ...s.est, motor: { ...s.est.motor } }; const m = e.motor;
+      if (m.dir === 'detenido') return null;
+      const now = Date.now(); const jam = s.sim.on && s.sim.atasco;
+      m.t_run = r1(m.t_run + 0.2);
+      const step = m.pwm / 100 * 100 / 7 * 0.2;
+      const stuck = jam && (m.dir === 'cerrar' ? e.pos >= 50 : e.pos <= 50);
+      if (!stuck) e.pos = r1(clamp(e.pos + (m.dir === 'cerrar' ? step : -step), 0, 100));
+      e.fc_cerrado = e.pos >= 100; e.fc_abierto = e.pos <= 0;
+      let events = s.events;
+      if ((m.dir === 'cerrar' && e.pos >= 100) || (m.dir === 'abrir' && e.pos <= 0)) {
+        const c = m.dir === 'cerrar'; m.dir = 'detenido'; m.ciclos += 1;
+        events = [mkEv(now, 'motor', c ? 'Cubierta cerrada' : 'Cubierta abierta', `${e.razon} · ${m.t_run.toFixed(1)} s`), ...events];
+      } else if (m.t_run > s.th.motorMax) {
+        m.dir = 'detenido'; e.error = 'atasco'; e.razon = `Detenido: superó ${s.th.motorMax} s sin final de carrera`; e.razon_t = now;
+        events = [mkEv(now, 'alerta', 'Posible atasco del motor', `${m.t_run.toFixed(1)} s sin final de carrera · posición ${Math.round(e.pos)} %`), ...events];
+      }
+      return { est: fin(e), events };
+    });
+  }
+
+  cmd(dir) {
+    const s = this.state;
+    if (s.est.modo !== 'manual') { this.toast('Cambia a modo Manual para usar los controles'); return; }
+    const e = { ...s.est, motor: { ...s.est.motor } }; const now = Date.now(); let events = s.events;
+    if (dir === 'detener') {
+      if (e.motor.dir === 'detenido') { this.toast('El motor ya está detenido'); return; }
+      e.motor.dir = 'detenido'; e.razon = 'Detenido manualmente'; e.razon_t = now;
+      events = [mkEv(now, 'motor', 'Motor detenido', `Manual · posición ${Math.round(e.pos)} %`), ...events];
+      this.toast('Motor detenido');
+    } else {
+      if (e.error === 'fc') { this.toast('Fallo de finales de carrera: motor bloqueado'); return; }
+      if (e.motor.dir === 'detenido' && ((dir === 'abrir' && e.pos <= 0) || (dir === 'cerrar' && e.pos >= 100))) { this.toast(dir === 'abrir' ? 'La cubierta ya está abierta' : 'La cubierta ya está cerrada'); return; }
+      e.error = null; e.motor.dir = dir; e.motor.t_run = 0; e.motor.pwm = s.th.pwm;
+      e.razon = dir === 'abrir' ? 'Apertura manual' : 'Cierre manual'; e.razon_t = now;
+      this.toast(dir === 'abrir' ? 'Abriendo cubierta…' : 'Cerrando cubierta…');
+    }
+    this.setState({ est: fin(e), events, flash: dir });
+    clearTimeout(this.ft); this.ft = setTimeout(() => this.setState({ flash: null }), 700);
+  }
+
+  setModo(modo) {
+    const s = this.state; if (s.est.modo === modo) return;
+    const now = Date.now();
+    this.setState({ est: { ...s.est, modo }, events: [mkEv(now, 'info', modo === 'auto' ? 'Modo Automático activado' : 'Modo Manual activado', 'Desde el panel'), ...s.events] });
+  }
+
+  setSim(patch) { this.setState(s => ({ sim: { ...s.sim, ...patch } })); }
+  toggleSim() {
+    const s = this.state; const on = !s.sim.on; const now = Date.now();
+    const patch = on ? { on, temp: Math.round(s.phys.temp), hum: Math.round(s.phys.hum), luz: Math.round(s.phys.luz) } : { on, atasco: false, fcFault: false, dhtFail: false, wifiOff: false, lowV: false, lluvia: 'Seco' };
+    this.setState({ sim: { ...s.sim, ...patch }, events: [mkEv(now, 'info', on ? 'Simulación iniciada' : 'Simulación finalizada', on ? 'Valores forzados desde el panel' : 'Vuelve a lecturas de sensores'), ...s.events] });
+  }
+
+  saveTh() {
+    const s = this.state; const now = Date.now();
+    this.setState({ th: { ...s.thDraft }, thSavedAt: now, events: [mkEv(now, 'info', 'Umbrales guardados en ESP32', `Hum ${s.thDraft.humMax}% · Temp ${s.thDraft.tempMax} °C · Luz ${s.thDraft.luzMin}% · PWM ${s.thDraft.pwm}%`), ...s.events] });
+    this.toast('Umbrales guardados en ESP32');
+  }
+
+  filtered() { const f = this.state.filter; return f === 'todos' ? this.state.events : this.state.events.filter(e => e.tipo === f); }
+
+  exportCsv() {
+    const rows = [['fecha', 'hora', 'tipo', 'evento', 'causa'], ...this.filtered().map(ev => { const d = new Date(ev.t); return [d.toLocaleDateString('es-PE'), d.toLocaleTimeString('es-PE', { hour12: false }), ev.tipo, ev.msg, ev.causa]; })];
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' }));
+    a.download = 'cacaocover-eventos.csv'; document.body.appendChild(a); a.click(); a.remove();
+    this.toast('CSV exportado');
+  }
+
+  drawOled() {
+    const cs = document.querySelectorAll('canvas[data-oled]'); if (!cs.length) return;
+    const W = 128, H = 64, S = 8, e = this.state.est;
+    const fb = new Uint8Array(W * H);
+    const px = (x, y, v) => { if (x >= 0 && x < W && y >= 0 && y < H) fb[y * W + x] = v; };
+    const box = (x, y, w, h, v) => { for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) px(i, j, v); };
+    const text = (str, x, y, v = 1) => [...str].forEach((ch, n) => {
+      const g = (ch.charCodeAt(0) - 32) * 10;
+      for (let c = 0; c < 5; c++) { const col = parseInt(FONT5X7.substr(g + c * 2, 2), 16) || 0; for (let b = 0; b < 8; b++) if (col >> b & 1) px(x + n * 6 + c, y + b, v); }
+    });
+    box(0, 0, W, 10, 1);
+    const modo = e.modo === 'auto' ? 'AUTO' : 'MANUAL';
+    text('CacaoCover', 2, 1, 0); text(modo, W - 2 - modo.length * 6, 1, 0);
+    const lab = rainLabel(e.lluvia, this.state.th);
+    text(e.dht_ok ? `T ${e.temp.toFixed(1)}C  H ${e.hum.toFixed(0)}%` : 'DHT22: SIN LECTURA', 2, 13);
+    text(`Luz ${e.luz_pct}%  ${lab}`, 2, 23);
+    const cw = { abierta: 'ABIERTA', cerrada: 'CERRADA', moviendo: e.motor.dir === 'abrir' ? 'ABRIENDO' : 'CERRANDO', error: 'ERROR', parcial: 'DETENIDA' }[e.cubierta];
+    text(`Cub: ${cw}`, 2, 33);
+    text(e.wifi.ok ? `WiFi ${e.wifi.rssi}dBm ${hhmm(e.ts)}` : `WiFi: --  ${hhmm(e.ts)}`, 2, 43);
+    box(2, 55, 123, 8, 1); box(3, 56, 121, 6, 0); box(4, 57, Math.round(119 * e.pos / 100), 4, 1);
+    cs.forEach(c => {
+      if (c.width !== W * S) { c.width = W * S; c.height = H * S; }
+      const x = c.getContext('2d'); x.fillStyle = '#020607'; x.fillRect(0, 0, W * S, H * S); x.fillStyle = '#c9f1ff';
+      for (let yy = 0; yy < H; yy++) for (let xx = 0; xx < W; xx++) if (fb[yy * W + xx]) x.fillRect(xx * S, yy * S, S, S);
+    });
+  }
+
+  renderVals() {
+    const s = this.state, e = s.est, th = s.th; const now = e.ts;
+    const lab = rainLabel(e.lluvia, th); const moving = e.motor.dir !== 'detenido';
+    const alerts = computeAlerts(e, th);
+    const critCount = alerts.filter(a => a.sev === 'crit').length;
+    const TABS = [['resumen', 'Resumen'], ['sensores', 'Sensores'], ['control', 'Control'], ['historial', 'Historial'], ['config', 'Configuración'], ['conex', 'Conexiones']];
+    const tabs = TABS.map(([id, label]) => ({ label, go: () => this.setState({ tab: id }), bg: s.tab === id ? 'var(--solid)' : 'transparent', fg: s.tab === id ? 'var(--solidInk)' : 'var(--ink)', hasBadge: id === 'resumen' && critCount > 0, badge: critCount }));
+    const seg = on => ({ bg: on ? 'var(--solid)' : 'transparent', fg: on ? 'var(--solidInk)' : 'var(--ink)' });
+
+    const cubSevMap = { abierta: lab !== 'Seco' ? 'crit' : 'ok', cerrada: 'ok', moviendo: 'info', error: 'crit', parcial: 'warn' };
+    const cubEstado = { abierta: 'Abierta', cerrada: 'Cerrada', moviendo: 'En movimiento', error: 'Error', parcial: 'Detenida' }[e.cubierta];
+    const cubWord = { abierta: 'Abierta', cerrada: 'Cerrada', moviendo: e.motor.dir === 'abrir' ? 'Abriendo' : 'Cerrando', error: 'Error', parcial: 'Detenida' }[e.cubierta];
+
+    const H = s.hist; const ago = H[Math.max(0, H.length - 11)];
+    const tr = (cur, old, d) => cur == null ? '·' : cur - old > d ? '↑' : cur - old < -d ? '↓' : '→';
+    const mid = new Date(now); mid.setHours(0, 0, 0, 0);
+    const today = H.filter(p => p.t >= mid.getTime()); const day = today.length ? today : H.slice(-60);
+    const mm = k => [Math.min(...day.map(p => p[k])), Math.max(...day.map(p => p[k]))];
+    const [tmin, tmax] = mm('temp'), [hmin, hmax] = mm('hum');
+    const G = 188.5; const dash = f => `${(clamp(f, 0, 1) * G).toFixed(1)} 999`;
+    const wet = clamp((4095 - e.lluvia) / 4095, 0, 1);
+    const rainSev = lab === 'Seco' ? null : e.pos < 100 ? 'crit' : 'warn';
+    const tiles = [
+      { label: 'Temperatura', value: e.temp == null ? '—' : e.temp.toFixed(1), unit: '°C', sub: `mín ${tmin.toFixed(1)} · máx ${tmax.toFixed(1)}`, trend: tr(e.temp, ago.temp, .3), dash: dash(((e.temp ?? 10) - 10) / 40), hasTag: e.temp == null || e.temp > th.tempMax, tag: e.temp == null ? '▲ Sin lectura' : '▲ Alta', tagBg: 'var(--warn)', tagFg: '#00545f' },
+      { label: 'Humedad', value: e.hum == null ? '—' : e.hum.toFixed(0), unit: '%', sub: `mín ${hmin.toFixed(0)} · máx ${hmax.toFixed(0)}`, trend: tr(e.hum, ago.hum, .8), dash: dash((e.hum ?? 0) / 100), hasTag: e.hum == null || e.hum > th.humMax, tag: e.hum == null ? '▲ Sin lectura' : `▲ > ${th.humMax}%`, tagBg: 'var(--warn)', tagFg: '#00545f' },
+      { label: 'Luz', value: String(e.luz_pct), unit: '%', sub: `${luzLabel(e.luz_pct)} · ${e.luz}/4095`, trend: tr(e.luz_pct, ago.luz, 2), dash: dash(e.luz_pct / 100), hasTag: false, tag: '', tagBg: '', tagFg: '' },
+      { label: 'Lluvia', value: lab, unit: '', sub: `AO ${e.lluvia} · DO ${e.lluvia_do}`, trend: lab === 'Seco' ? '○' : '●', dash: dash(wet), hasTag: !!rainSev, tag: rainSev === 'crit' ? '✕ Cubierta abierta' : '▲ Detectada', tagBg: rainSev === 'crit' ? 'var(--crit)' : 'var(--warn)', tagFg: rainSev === 'crit' ? '#fff' : '#00545f' },
+    ];
+
+    const alertList = alerts.length ? alerts.map(a => ({ ...a, ...SEV[a.sev], sevLabel: { crit: 'Crítica', warn: 'Aviso', info: 'Info' }[a.sev], border: a.sev === 'crit' ? 'var(--crit)' : 'transparent' }))
+      : [{ ...SEV.ok, title: 'Todo en orden', detail: 'Sensores, motor y conexión funcionando con normalidad.', sevLabel: 'Normal', border: 'transparent' }];
+
+    const bars = n => [1, 2, 3, 4].map(i => ({ h: `${i * 25}%`, op: i <= n ? 1 : 0.2 }));
+    const r = e.wifi.rssi; const nb = !e.wifi.ok ? 0 : r > -55 ? 4 : r > -65 ? 3 : r > -75 ? 2 : 1;
+    const up = e.uptime; const upL = `${Math.floor(up / 86400)} d ${String(Math.floor(up % 86400 / 3600)).padStart(2, '0')} h ${String(Math.floor(up % 3600 / 60)).padStart(2, '0')} min`;
+
+    const ledOn = 'var(--ok)', ledOff = 'var(--line)';
+    const fcErr = e.error === 'fc';
+    const runFrac = clamp(e.motor.t_run / th.motorMax, 0, 1);
+
+    const recent = s.events.slice(0, 5).map(ev => ({ hora: hhmm(ev.t), msg: ev.msg, causa: ev.causa }));
+    const TIPO = { alerta: { bg: 'var(--crit)', fg: '#fff', icon: '!' }, motor: { bg: 'var(--solid)', fg: 'var(--solidInk)', icon: 'M' }, lluvia: { bg: 'var(--warn)', fg: '#00545f', icon: 'LL' }, info: { bg: 'var(--chip)', fg: 'var(--ink)', icon: 'i' } };
+    const fl = this.filtered();
+    const dayLbl = t => { const d0 = new Date(now); d0.setHours(0, 0, 0, 0); return t >= d0.getTime() ? 'Hoy' : t >= d0.getTime() - 86400000 ? 'Ayer' : new Date(t).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' }); };
+    const logRows = fl.slice(0, 60).map(ev => ({ hora: hhmm(ev.t), dia: dayLbl(ev.t), msg: ev.msg, causa: ev.causa, ...TIPO[ev.tipo] }));
+
+    // Charts
+    const R = s.range; const sl = H.slice(-R); const stp = Math.max(1, Math.floor(sl.length / 240));
+    const pts = sl.filter((_, i) => i % stp === 0 || i === sl.length - 1);
+    const t0 = sl[0].t, t1 = sl[sl.length - 1].t; const X = t => (t - t0) / (t1 - t0 || 1) * 1000;
+    const hIdx = s.hover == null ? null : Math.round(s.hover * (sl.length - 1)); const hp = hIdx == null ? null : sl[hIdx];
+    const defs = [
+      { key: 'temp', name: 'Temperatura', unit: '°C', lo: 10, hi: 45, dp: 1 },
+      { key: 'hum', name: 'Humedad', unit: '%', lo: 0, hi: 100, dp: 0, thr: th.humMax },
+      { key: 'luz', name: 'Luz', unit: '%', lo: 0, hi: 100, dp: 0, thr: th.luzMin },
+      { key: 'lluvia', name: 'Lluvia · humectación', unit: '%', lo: 0, hi: 100, dp: 0, get: p => (4095 - p.lluvia) / 40.95 },
+    ];
+    const charts = defs.map(d => {
+      const g = d.get || (p => p[d.key]); const Y = v => 100 - clamp((v - d.lo) / (d.hi - d.lo), 0, 1) * 94 - 3;
+      const path = 'M' + pts.map(p => `${X(p.t).toFixed(1)},${Y(g(p)).toFixed(1)}`).join('L');
+      const vals = sl.map(g); const mn = Math.min(...vals), mx = Math.max(...vals);
+      return { name: d.name, path, area: path + 'L1000,100L0,100Z', stats: `ahora ${g(sl[sl.length - 1]).toFixed(d.dp)} ${d.unit} · mín ${mn.toFixed(d.dp)} · máx ${mx.toFixed(d.dp)}`, hasThr: d.thr != null, thrTop: d.thr != null ? `${Y(d.thr)}%` : '0', hoverVal: hp ? `${g(hp).toFixed(d.dp)} ${d.unit}` : '', hoverTop: hp ? `${Y(g(hp))}%` : '0' };
+    });
+    const markers = s.events.filter(ev => ev.tipo === 'motor' && ev.t >= t0 && ev.t <= t1 && /Cubierta/.test(ev.msg)).map(ev => { const o = /abierta/.test(ev.msg); return { left: `${X(ev.t) / 10}%`, label: o ? 'A' : 'C', color: o ? 'var(--ok)' : 'var(--ink)', fg: o ? '#fff' : 'var(--bg)' }; });
+    const hv = s.hover ?? 0;
+
+    // Thresholds
+    const SL = [
+      { key: 'humMax', label: 'Humedad máxima para cerrar', min: 50, max: 95, step: 1, unit: '%', help: 'Sobre este valor la cubierta se cierra. Mide aire, no grano.' },
+      { key: 'tempMax', label: 'Temperatura máxima', min: 30, max: 55, step: 1, unit: ' °C', help: 'Cierra para dar sombra si el aire se calienta demasiado.' },
+      { key: 'luzMin', label: 'Luz mínima para abrir', min: 0, max: 80, step: 1, unit: '%', help: 'Por debajo se considera noche o muy nublado.' },
+      { key: 'lluviaSens', label: 'Sensibilidad de lluvia', min: 10, max: 100, step: 1, unit: '%', help: '' },
+      { key: 'motorMax', label: 'Tiempo máximo del motor', min: 4, max: 30, step: 1, unit: ' s', help: 'Si no llega al final de carrera en este tiempo, se detiene por atasco.' },
+      { key: 'pwm', label: 'Velocidad PWM', min: 30, max: 100, step: 5, unit: '%', help: '' },
+    ];
+    const D = s.thDraft;
+    const thSliders = SL.map(x => ({ ...x, value: D[x.key], display: `${D[x.key]}${x.unit}`, border: D[x.key] !== th[x.key] ? 'var(--warn)' : 'transparent',
+      help: x.key === 'lluviaSens' ? `Detecta lluvia cuando AO < ${rainThr(D)}. Más alto = detecta antes.` : x.key === 'pwm' ? (700 / D.pwm >= D.motorMax ? `▲ Recorrido ≈ ${(700 / D.pwm).toFixed(1)} s, supera el tiempo máximo de ${D.motorMax} s: dará falso atasco. Sube el PWM o el tiempo.` : `Recorrido completo ≈ ${(700 / D.pwm).toFixed(1)} s. Debe ser menor que el tiempo máximo.`) : x.help,
+      onChange: ev => { const v = +ev.target.value; this.setState(st => ({ thDraft: { ...st.thDraft, [x.key]: v } })); } }));
+    const dirty = SL.some(x => D[x.key] !== th[x.key]);
+
+    // Sim
+    const sim = s.sim;
+    const simSliders = [{ k: 'temp', label: 'Temperatura', min: 10, max: 50, step: 1, u: ' °C' }, { k: 'hum', label: 'Humedad', min: 20, max: 100, step: 1, u: '%' }, { k: 'luz', label: 'Luz', min: 0, max: 100, step: 1, u: '%' }]
+      .map(x => ({ ...x, value: sim[x.k], display: `${sim[x.k]}${x.u}`, onChange: ev => this.setSim({ [x.k]: +ev.target.value }) }));
+    const faults = [['atasco', 'Atasco del motor'], ['fcFault', 'Ambos finales de carrera'], ['dhtFail', 'DHT22 sin lectura'], ['wifiOff', 'WiFi desconectado'], ['lowV', 'Voltaje bajo']]
+      .map(([k, label]) => ({ label: (sim[k] ? '✕ ' : '') + label, toggle: () => this.setSim({ [k]: !sim[k] }), bg: sim[k] ? 'var(--crit)' : 'transparent', fg: sim[k] ? '#fff' : 'var(--ink)', border: sim[k] ? 'var(--crit)' : 'var(--line)' }));
+
+    // Diagram
+    const live = {
+      dht: e.dht_ok ? `${e.temp.toFixed(1)} °C · ${e.hum.toFixed(0)} %` : 'Sin lectura', ldr: `${e.luz}/4095 · ${e.luz_pct} %`, rain: `AO ${e.lluvia} · DO ${e.lluvia_do}`,
+      fca: e.fc_abierto ? 'Presionado' : 'Libre', fcc: e.fc_cerrado ? 'Presionado' : 'Libre', drv: moving ? `${e.motor.dir === 'abrir' ? 'Abrir' : 'Cerrar'} · PWM ${e.motor.pwm} %` : 'Detenido',
+      motor: moving ? `Girando · ${e.motor.t_run.toFixed(1)} s` : `Detenido · ${e.motor.ciclos} ciclos`, oled: 'Activa · actualizando', adc: `${e.v5.toFixed(2)} V · ${e.v6.toFixed(2)} V`, pwr: e.fuente === 'ok' ? 'Estable' : 'Caída de tensión',
+    };
+    const leds = { dht: e.dht_ok ? ledOn : 'var(--warn)', ldr: ledOn, rain: lab === 'Seco' ? ledOn : 'var(--warn)', fca: fcErr ? 'var(--crit)' : e.fc_abierto ? ledOn : ledOff, fcc: fcErr ? 'var(--crit)' : e.fc_cerrado ? ledOn : ledOff, drv: e.error === 'atasco' ? 'var(--crit)' : moving ? 'var(--hi)' : ledOff, motor: e.error === 'atasco' ? 'var(--crit)' : moving ? 'var(--hi)' : ledOff, oled: ledOn, adc: e.fuente === 'ok' ? ledOn : 'var(--warn)', pwr: e.fuente === 'ok' ? ledOn : 'var(--crit)' };
+    const comps = COMPS.map(c => { const on = s.sel === c.id; return { name: c.name, live: live[c.id], led: leds[c.id], left: c.side === 'L' ? '1%' : '75%', top: `${c.y}%`, pick: () => this.setState({ sel: c.id }), bg: on ? 'var(--solid)' : 'var(--card)', fg: on ? 'var(--solidInk)' : 'var(--ink)', border: on ? 'var(--solid)' : 'var(--line)' }; });
+    const wires = [], pinTags = [];
+    COMPS.forEach(c => {
+      const cy = c.y + 7; const on = s.sel === c.id;
+      const w = { color: on ? 'var(--hi)' : 'var(--line)', width: on ? 3 : 2, dash: (c.id === 'drv' || c.id === 'motor') && moving ? '6 4' : 'none' };
+      if (c.id === 'motor') { wires.push({ ...w, pts: `87,19 87,24` }); return; }
+      if (c.side === 'L') { wires.push({ ...w, pts: `25,${cy} 36,${cy}` }); pinTags.push({ left: '30.5%', top: `${cy}%`, label: c.tag }); }
+      else { wires.push({ ...w, pts: `64,${cy} 75,${cy}` }); pinTags.push({ left: '69.5%', top: `${cy}%`, label: c.tag }); }
+      if (c.id === 'pwr') wires.push({ ...w, pts: `99,88 99.6,88 99.6,12 99,12` });
+    });
+    const sc = COMPS.find(c => c.id === s.sel);
+
+    const payload = { temp: e.temp, hum: e.hum, luz: e.luz, lluvia: e.lluvia, cubierta: e.cubierta, fc_abierto: e.fc_abierto, fc_cerrado: e.fc_cerrado, motor: { dir: e.motor.dir, pwm: e.motor.pwm }, v5: e.v5, v6: e.v6, wifi: { rssi: e.wifi.rssi, ip: e.wifi.ip }, uptime: e.uptime, modo: e.modo };
+    const chipOf = (sev, label) => ({ ...SEV[sev], label });
+    const isManual = e.modo === 'manual'; const ring = k => s.flash === k ? '0 0 0 4px var(--bg), 0 0 0 8px var(--hi)' : 'none';
+    const sky = lab !== 'Seco' ? ['Lluvia', 'var(--ink)'] : e.luz_pct < 8 ? ['Noche', '#00353c'] : e.luz_pct < 45 ? ['Nublado', '#ecffb6'] : ['Sol', '#d6fb00'];
+
+    return {
+      bgPlay: (this.props.fondoAnimado ?? true) ? 'running' : 'paused', grain: this.props.grano ?? 0.32,
+      connColor: e.wifi.ok ? 'var(--ok)' : 'var(--crit)', connLabel: e.wifi.ok ? `En línea · ${hhmmss(now)}` : `Sin WiFi · ${hhmmss(now)}`,
+      modoBadge: isManual ? 'MANUAL' : 'AUTO', simOn: sim.on, themeLabel: s.theme === 'dark' ? 'Oscuro' : 'Claro',
+      toggleTheme: () => this.setState(st => ({ theme: st.theme === 'dark' ? 'light' : 'dark' })),
+      tabs, isResumen: s.tab === 'resumen', isSensores: s.tab === 'sensores', isControl: s.tab === 'control', isHistorial: s.tab === 'historial', isConfig: s.tab === 'config', isConex: s.tab === 'conex',
+      goSensores: () => this.setState({ tab: 'sensores' }), goHistorial: () => this.setState({ tab: 'historial' }),
+      cubChip: SEV[cubSevMap[e.cubierta]], cubEstado, cubWord,
+      razonText: e.razon || '—', razonHora: `${hhmm(e.razon_t)} · ${isManual ? 'Manual' : 'Automático'}`,
+      setAuto: () => this.setModo('auto'), setManual: () => this.setModo('manual'),
+      autoBg: seg(!isManual).bg, autoFg: seg(!isManual).fg, manualBg: seg(isManual).bg, manualFg: seg(isManual).fg,
+      modoNote: isManual ? (e.error === 'atasco' ? 'Atasco registrado: usa Abrir o Cerrar para reintentar.' : 'Controles activos. El sistema no actuará por su cuenta.') : 'El ESP32 decide según los umbrales. Cambia a Manual para usar los botones.',
+      skyLabel: sky[0], skyBg: sky[1], raining: lab !== 'Seco', drops: Array.from({ length: lab === 'Lluvia' ? 22 : 10 }, (_, i) => ({ left: `${(i * 37) % 100}%`, delay: `${((i * 0.29) % 1.1).toFixed(2)}s` })),
+      roofX: `${-(100 - e.pos) * 0.9}%`, fcaLed: fcErr ? 'var(--crit)' : e.fc_abierto ? ledOn : ledOff, fccLed: fcErr ? 'var(--crit)' : e.fc_cerrado ? ledOn : ledOff,
+      posLabel: `${Math.round(e.pos)} % cerrada`, motorDot: moving ? 'var(--hi)' : e.error === 'atasco' ? 'var(--crit)' : 'var(--line)', motorPulse: moving ? 'pulse 1.2s ease-out infinite' : 'none',
+      motorDirLabel: moving ? (e.motor.dir === 'abrir' ? 'Abriendo' : 'Cerrando') : 'Detenido', motorGlyph: moving ? (e.motor.dir === 'abrir' ? '←' : '→') : '■',
+      motorDirSub: `dir: ${e.motor.dir}${e.error === 'atasco' ? ' · atasco' : ''}`, ciclos: String(e.motor.ciclos),
+      pwmLabel: `${e.motor.pwm} %`, runLabel: `${e.motor.t_run.toFixed(1)} s`, runBar: `${runFrac * 100}%`, runBarColor: e.error === 'atasco' ? 'var(--crit)' : runFrac > .8 ? 'var(--warn)' : 'var(--hi)', runMaxNote: `Máximo permitido: ${th.motorMax} s ${moving ? '· en marcha' : '· último recorrido'}`,
+      jam: e.error === 'atasco', btnOpacity: isManual ? 1 : 0.38, btnCursor: isManual ? 'pointer' : 'not-allowed',
+      cmdAbrir: () => this.cmd('abrir'), cmdCerrar: () => this.cmd('cerrar'), cmdDetener: () => this.cmd('detener'), ringAbrir: ring('abrir'), ringCerrar: ring('cerrar'), ringDetener: ring('detener'),
+      alerts: alertList, alertCount: alerts.filter(a => a.sev !== 'info').length ? `${alerts.filter(a => a.sev !== 'info').length} activas` : 'sin alertas',
+      tiles, bars: bars(nb), barsBig: bars(nb), rssiLabel: e.wifi.ok ? `${r} dBm` : 'Sin señal', uptimeLabel: upL,
+      v5Label: `${e.v5.toFixed(2)} V`, v6Label: `${e.v6.toFixed(2)} V`, recentEvents: recent,
+      dhtChip: e.dht_ok ? chipOf('ok', 'Lectura OK') : chipOf('warn', 'Sin lectura'),
+      tempLabel: e.temp == null ? '—' : `${e.temp.toFixed(1)}°`, humLabel: e.hum == null ? '—' : `${e.hum.toFixed(0)}%`, tempTrend: tiles[0].trend, humTrend: tiles[1].trend,
+      tempMinMax: `hoy mín ${tmin.toFixed(1)} · máx ${tmax.toFixed(1)} °C`, humMinMax: `hoy mín ${hmin.toFixed(0)} · máx ${hmax.toFixed(0)} %`,
+      luzLabel: luzLabel(e.luz_pct), luzPct: String(e.luz_pct), luzRaw: `${e.luz} / 4095`, luzBar: `${e.luz_pct}%`, luzMinPos: `${th.luzMin}%`, luzMinNote: `mín. para abrir ${th.luzMin} %`,
+      rainChip: lab === 'Seco' ? chipOf('ok', 'Seco') : chipOf(rainSev, rainSev === 'crit' ? 'Cubierta abierta' : 'Detectada'), rainLab: lab, rainRaw: String(e.lluvia), rainThrLabel: `umbral < ${rainThr(th)}`,
+      doLed: e.lluvia_do === 0 ? 'var(--warn)' : ledOn, doLabel: e.lluvia_do === 0 ? '0 · Mojado' : '1 · Seco',
+      fcList: [{ name: 'Abierto completo', pin: 'GPIO25', on: e.fc_abierto }, { name: 'Cerrado completo', pin: 'GPIO26', on: e.fc_cerrado }].map(f => ({ ...f, led: fcErr ? 'var(--crit)' : f.on ? ledOn : ledOff, glow: f.on ? `0 0 0 5px var(--chip), 0 0 14px ${fcErr ? 'var(--crit)' : 'var(--ok)'}` : '0 0 0 5px var(--chip)', state: fcErr ? '✕ Fallo' : f.on ? '✓ Presionado' : 'Libre' })),
+      pwrChip: e.fuente === 'ok' ? chipOf('ok', 'Fuente estable') : chipOf(e.v6 < 5.4 ? 'crit' : 'warn', 'Caída de tensión'),
+      ranges: [[60, '1 h'], [360, '6 h'], [1440, '24 h']].map(([v, label]) => ({ label, pick: () => this.setState({ range: v }), ...seg(s.range === v) })),
+      charts, markers, hovering: s.hover != null, hoverLeft: `${hv * 100}%`, tipShift: hv > .85 ? 'translate(-100%,-100%)' : hv < .15 ? 'translate(0,-100%)' : 'translate(-50%,-100%)',
+      hoverTime: hp ? hhmm(hp.t) : '', axisStart: hhmm(t0),
+      onChartMove: ev => { const b = ev.currentTarget.getBoundingClientRect(); this.setState({ hover: clamp((ev.clientX - b.left) / b.width, 0, 1) }); },
+      onChartLeave: () => this.setState({ hover: null }),
+      filters: [['todos', 'Todos'], ['alerta', 'Alertas'], ['motor', 'Motor'], ['lluvia', 'Lluvia']].map(([id, label]) => ({ label, pick: () => this.setState({ filter: id }), ...seg(s.filter === id) })),
+      logRows, logCount: `${Math.min(60, fl.length)} de ${fl.length} eventos`, exportCsv: () => this.exportCsv(),
+      thSliders, dirty, saveTh: () => this.saveTh(), resetTh: () => { this.setState({ thDraft: { ...DEF } }); this.toast('Valores por defecto cargados. Guarda para aplicarlos.'); },
+      thSaved: `En ESP32: hum ${th.humMax} % · temp ${th.tempMax} °C · luz ${th.luzMin} % · lluvia ${th.lluviaSens} % · motor ${th.motorMax} s · PWM ${th.pwm} %${s.thSavedAt ? ' · guardado ' + hhmm(s.thSavedAt) : ''}`,
+      toggleSim: () => this.toggleSim(), simLabel: sim.on ? 'Activa' : 'Inactiva', simTrack: sim.on ? 'var(--hi)' : 'var(--line)', simKnob: sim.on ? '26px' : '4px', simOpacity: sim.on ? 1 : 0.45, simEvents: sim.on ? 'auto' : 'none',
+      rainOpts: ['Seco', 'Llovizna', 'Lluvia'].map(o => ({ label: o, pick: () => this.setSim({ lluvia: o }), ...seg(sim.lluvia === o) })), faults, simSliders,
+      comps, wires, pinTags, espState: e.wifi.ok ? 'WiFi OK' : 'sin WiFi',
+      selComp: { name: sc.name, sub: sc.sub, note: sc.note, live: live[sc.id] }, selPins: sc.pins.map(([a, b]) => ({ a, b })),
+      wifiChip: !e.wifi.ok ? chipOf('warn', 'Desconectado') : r < -75 ? chipOf('warn', 'Señal débil') : chipOf('ok', 'Conectado'), ssid: `SSID ${e.wifi.ssid}`,
+      netRows: [{ k: 'IP', v: e.wifi.ip || '—' }, { k: 'UPTIME', v: upL }, { k: 'MEMORIA LIBRE', v: `${(e.heap / 1024).toFixed(1)} kB` }, { k: 'ÚLTIMA ACTUALIZACIÓN', v: hhmmss(now) }],
+      jsonText: JSON.stringify(payload, null, 2),
+      hasToast: !!s.toast, toastMsg: s.toast || '',
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+:root {
+  --lima-claro: #ecffb6;
+  --lima: #d6fb00;
+  --petroleo: #00545f;
+  --g1: #f3ffd0;
+  --g2: #d6fb00;
+  --blob-a: #d6fb00;
+  --blob-b: #f4ffd6;
+  --blob-c: rgba(0, 84, 95, .55);
+  --ink: #00545f;
+  --ink2: rgba(0, 84, 95, .86);
+  --card: rgba(250, 255, 232, .68);
+  --card-border: rgba(255, 255, 255, .75);
+  --line: rgba(0, 84, 95, .16);
+  --chip: rgba(0, 84, 95, .07);
+  --solid: #00545f;
+  --solid-ink: #ecffb6;
+  --hi: #00545f;
+  --bed: rgba(0, 84, 95, .1);
+  --bean: rgba(0, 84, 95, .45);
+  --roof: #00545f;
+  --roof-stripe: rgba(236, 255, 182, .22);
+  --shadow: 0 14px 40px -22px rgba(0, 84, 95, .45);
+  --ok: oklch(.52 .13 158);
+  --warn: oklch(.8 .15 70);
+  --crit: oklch(.56 .2 25);
+  --display: 'Unbounded', system-ui, sans-serif;
+  --body: 'Instrument Sans', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+}
+
+:root[data-theme='dark'] {
+  --g1: #00434c;
+  --g2: #00616c;
+  --blob-a: rgba(214, 251, 0, .42);
+  --blob-b: rgba(236, 255, 182, .28);
+  --blob-c: #00353c;
+  --ink: #ecffb6;
+  --ink2: rgba(236, 255, 182, .84);
+  --card: rgba(0, 46, 53, .58);
+  --card-border: rgba(236, 255, 182, .14);
+  --line: rgba(236, 255, 182, .16);
+  --chip: rgba(236, 255, 182, .08);
+  --solid: #d6fb00;
+  --solid-ink: #00545f;
+  --hi: #d6fb00;
+  --bed: rgba(236, 255, 182, .08);
+  --bean: rgba(236, 255, 182, .42);
+  --roof: #d6fb00;
+  --roof-stripe: rgba(0, 84, 95, .28);
+  --shadow: 0 14px 40px -22px rgba(0, 0, 0, .6);
+  --ok: oklch(.62 .14 158);
+  --crit: oklch(.62 .2 25);
+}
