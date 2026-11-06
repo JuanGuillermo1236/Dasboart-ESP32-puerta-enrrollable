@@ -1,6 +1,8 @@
 node_modules/
 frontend/dist/
 firmware/.pio/
+firmware/arduino/
 firmware/data/
 firmware/include/secrets.h
 *.log
+backend/datos/

@@ -1,30 +1,29 @@
-import { abrirSocket } from './socket.ts';
-import type { Accion, Modo, RespuestaEscritura, Transporte } from './types.ts';
+import type { Accion, Evento, Lecturas, Rango, RespuestaComando } from './types.ts';
 
-const TIMEOUT_MS = 5000;
+const TIMEOUT_MS = 6000;
 
 // Nunca asume éxito: sin respuesta o con error HTTP devuelve ok: false.
-export async function post(ruta: string, cuerpo: unknown, fetchFn: typeof fetch = fetch): Promise<RespuestaEscritura> {
+export async function enviarComando(accion: Accion, fetchFn: typeof fetch = fetch): Promise<RespuestaComando> {
   try {
-    const r = await fetchFn(ruta, {
+    const r = await fetchFn('/api/comando', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(cuerpo),
+      body: JSON.stringify({ accion }),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
-    const datos = (await r.json().catch(() => null)) as RespuestaEscritura | null;
+    const datos = (await r.json().catch(() => null)) as RespuestaComando | null;
     if (r.ok && datos?.ok) return { ok: true };
     return datos && !datos.ok ? datos : { ok: false, error: `http_${r.status}` };
   } catch {
-    return { ok: false, error: 'sin_respuesta', mensaje: 'El ESP32 no respondió. El comando no se confirmó.' };
+    return { ok: false, error: 'sin_backend' };
   }
 }
 
-export const transporteEsp32: Transporte = {
-  conectar(onEstado, onConexion) {
-    const esquema = location.protocol === 'https:' ? 'wss' : 'ws';
-    return abrirSocket(`${esquema}://${location.host}/ws`, onEstado, onConexion);
-  },
-  comando: (accion: Accion) => post('/api/comando', { accion }),
-  cambiarModo: (modo: Modo) => post('/api/modo', { modo }),
-};
+async function obtener<T>(ruta: string): Promise<T> {
+  const r = await fetch(ruta, { signal: AbortSignal.timeout(TIMEOUT_MS) });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return (await r.json()) as T;
+}
+
+export const obtenerEventos = (limite = 300) => obtener<Evento[]>(`/api/eventos?limite=${limite}`);
+export const obtenerLecturas = (rango: Rango) => obtener<Lecturas>(`/api/lecturas?rango=${rango}`);

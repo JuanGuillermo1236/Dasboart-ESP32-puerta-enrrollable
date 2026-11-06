@@ -1,31 +1,31 @@
 #include <unity.h>
 
+#include "../../src/control/clasificacion.h"
 #include "../../src/control/filtro.h"
 #include "../../src/control/logica.cpp"
 
 namespace {
 constexpr uint32_t T0 = 100000;  // ya pasó la espera inicial
+constexpr uint32_t MIN = 60000;
 
-Entradas favorable(uint32_t t = T0) {
+// Techo plegado (abierto), de día y seco.
+Entradas plegado(uint32_t t = T0) {
   Entradas e;
   e.ahoraMs = t;
   e.hayLuz = true;
-  e.dhtOk = true;
-  e.temp = 28;
-  e.hum = 50;
-  e.fcAbierto = true;
+  e.fcPlegado = true;
   return e;
 }
 
 Entradas enMedio(uint32_t t = T0) {
-  Entradas e = favorable(t);
-  e.fcAbierto = false;
+  Entradas e = plegado(t);
+  e.fcPlegado = false;
   return e;
 }
 
-Entradas cerradaFav(uint32_t t = T0) {
+Entradas desplegado(uint32_t t = T0) {
   Entradas e = enMedio(t);
-  e.fcCerrado = true;
+  e.fcDesplegado = true;
   return e;
 }
 }  // namespace
@@ -33,97 +33,101 @@ Entradas cerradaFav(uint32_t t = T0) {
 void setUp() {}
 void tearDown() {}
 
-void test_no_se_mueve_si_todo_esta_bien() {
-  ControlCubierta c{Umbrales{}};
-  TEST_ASSERT_TRUE(c.actualizar(favorable()) == DirMotor::Detenido);
+void test_de_dia_y_seco_queda_plegado() {
+  ControlTecho c{Umbrales{}};
+  TEST_ASSERT_TRUE(c.actualizar(plegado()) == DirMotor::Detenido);
 }
 
-void test_lluvia_cierra_sin_esperar() {
-  ControlCubierta c{Umbrales{}};
-  Entradas e = favorable(10);  // dentro de la espera inicial
+void test_lluvia_despliega_sin_esperar() {
+  ControlTecho c{Umbrales{}};
+  Entradas e = plegado(10);  // dentro de la espera inicial
   e.mojado = true;
-  TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Cerrar);
+  TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Desplegar);
   TEST_ASSERT_TRUE(c.razon() == Razon::Lluvia);
 }
 
 void test_lluvia_manda_sobre_manual() {
-  ControlCubierta c{Umbrales{}};
-  c.actualizar(favorable());
+  ControlTecho c{Umbrales{}};
+  c.actualizar(plegado());
   c.cambiarModo(Modo::Manual);
-  Entradas e = favorable(T0 + 100);
+  Entradas e = plegado(T0 + 100);
   e.mojado = true;
-  TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Cerrar);
+  TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Desplegar);
 }
 
 void test_opcion_lluvia_no_manda_en_manual() {
   Umbrales u;
   u.lluviaManda = false;
-  ControlCubierta c{u};
-  c.actualizar(favorable());
+  ControlTecho c{u};
+  c.actualizar(plegado());
   c.cambiarModo(Modo::Manual);
-  Entradas e = favorable(T0 + 100);
+  Entradas e = plegado(T0 + 100);
   e.mojado = true;
   TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Detenido);
 }
 
-void test_lluvia_invierte_apertura() {
-  ControlCubierta c{Umbrales{}};
-  c.actualizar(cerradaFav());
-  TEST_ASSERT_TRUE(c.dir() == DirMotor::Abrir);
+void test_lluvia_invierte_un_plegado() {
+  ControlTecho c{Umbrales{}};
+  TEST_ASSERT_TRUE(c.actualizar(desplegado()) == DirMotor::Plegar);
   Entradas e = enMedio(T0 + 500);
   e.mojado = true;
-  TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Cerrar);
+  TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Desplegar);
 }
 
-void test_rechaza_abrir_con_lluvia() {
-  ControlCubierta c{Umbrales{}};
-  Entradas e = cerradaFav();
+void test_espera_15_min_sin_lluvia_para_plegar() {
+  ControlTecho c{Umbrales{}};
+  Entradas e = desplegado();
+  e.mojado = true;
+  c.actualizar(e);  // última lluvia en T0
+  e = desplegado(T0 + 15 * MIN - 1);
+  TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Detenido);
+  e.ahoraMs = T0 + 15 * MIN;
+  TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Plegar);
+}
+
+void test_llovizna_corta_reinicia_los_15_min() {
+  ControlTecho c{Umbrales{}};
+  Entradas e = desplegado();
   e.mojado = true;
   c.actualizar(e);
-  c.cambiarModo(Modo::Manual);
-  TEST_ASSERT_TRUE(c.comando(Accion::Abrir) == ResultadoComando::LluviaActiva);
-}
-
-void test_histeresis_humedad() {
-  ControlCubierta c{Umbrales{}};
-  Entradas e = cerradaFav();
-  e.hum = 72;  // bajo 75 pero sobre 70
+  e = desplegado(T0 + 10 * MIN);
+  e.mojado = true;
+  c.actualizar(e);
+  e = desplegado(T0 + 16 * MIN);
   TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Detenido);
-  e.hum = 69;
-  e.ahoraMs = T0 + 1000;
-  TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Abrir);
+  e.ahoraMs = T0 + 25 * MIN;
+  TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Plegar);
 }
 
-void test_cierra_por_humedad_y_luz() {
-  ControlCubierta c{Umbrales{}};
-  Entradas e = favorable();
-  e.hum = 76;
-  TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Cerrar);
-  TEST_ASSERT_TRUE(c.razon() == Razon::Humedad);
-  ControlCubierta d{Umbrales{}};
-  e = favorable();
+void test_de_noche_despliega_y_no_pliega() {
+  ControlTecho c{Umbrales{}};
+  Entradas e = plegado();
   e.hayLuz = false;
-  d.actualizar(e);
-  TEST_ASSERT_TRUE(d.razon() == Razon::PocaLuz);
+  TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Desplegar);
+  TEST_ASSERT_TRUE(c.razon() == Razon::Noche);
+  ControlTecho d{Umbrales{}};
+  e = desplegado();
+  e.hayLuz = false;
+  TEST_ASSERT_TRUE(d.actualizar(e) == DirMotor::Detenido);
 }
 
 void test_espera_entre_acciones() {
-  ControlCubierta c{Umbrales{}};
-  Entradas e = favorable();
-  e.hum = 80;
+  ControlTecho c{Umbrales{}};
+  Entradas e = plegado();
+  e.hayLuz = false;
   c.actualizar(e);
-  e = cerradaFav(T0 + 5000);  // llegó y mejoró el clima
+  e = desplegado(T0 + 5000);  // llegó y volvió la luz
   TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Detenido);
   TEST_ASSERT_EQUAL_UINT32(1, c.ciclos());
   e.ahoraMs = T0 + 5000 + 59000;
   TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Detenido);
   e.ahoraMs = T0 + 5000 + 60000;
-  TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Abrir);
+  TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Plegar);
 }
 
 void test_atasco_por_tiempo_y_no_reintenta() {
-  ControlCubierta c{Umbrales{}};
-  Entradas e = favorable();
+  ControlTecho c{Umbrales{}};
+  Entradas e = plegado();
   e.mojado = true;
   c.actualizar(e);
   e = enMedio(T0 + 12001);
@@ -134,53 +138,45 @@ void test_atasco_por_tiempo_y_no_reintenta() {
   TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Detenido);
 }
 
-void test_manual_borra_atasco() {
-  ControlCubierta c{Umbrales{}};
-  Entradas e = favorable();
-  e.hum = 90;
+void test_comando_borra_atasco_y_pasa_a_manual() {
+  ControlTecho c{Umbrales{}};
+  Entradas e = plegado();
+  e.hayLuz = false;
   c.actualizar(e);
   e = enMedio(T0 + 13000);
-  e.hum = 90;
+  e.hayLuz = false;
   c.actualizar(e);
   TEST_ASSERT_TRUE(c.atasco());
-  c.cambiarModo(Modo::Manual);
-  TEST_ASSERT_TRUE(c.comando(Accion::Cerrar) == ResultadoComando::Aceptado);
+  TEST_ASSERT_TRUE(c.comando(Accion::Desplegar) == ResultadoComando::Aceptado);
   TEST_ASSERT_FALSE(c.atasco());
+  TEST_ASSERT_TRUE(c.modo() == Modo::Manual);
 }
 
 void test_ambos_finales_detiene_y_bloquea() {
-  ControlCubierta c{Umbrales{}};
-  Entradas e = favorable();
-  e.hum = 90;
+  ControlTecho c{Umbrales{}};
+  Entradas e = plegado();
+  e.hayLuz = false;
   c.actualizar(e);
-  e = favorable(T0 + 100);
-  e.fcCerrado = true;
+  e = plegado(T0 + 100);
+  e.fcDesplegado = true;
   e.mojado = true;
   TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Detenido);
-  c.cambiarModo(Modo::Manual);
-  TEST_ASSERT_TRUE(c.comando(Accion::Cerrar) == ResultadoComando::FalloFinales);
+  TEST_ASSERT_TRUE(c.comando(Accion::Desplegar) == ResultadoComando::FalloFinales);
+  TEST_ASSERT_TRUE(clasificarTecho(true, true, DirMotor::Detenido, false) == EstadoTecho::Error);
 }
 
-void test_sin_dht_decide_con_luz_y_lluvia() {
-  ControlCubierta c{Umbrales{}};
-  Entradas e = cerradaFav();
-  e.dhtOk = false;
-  e.hum = 99;
-  TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Abrir);
-}
-
-void test_arranque_sin_posicion_solo_cierra_con_lluvia() {
-  ControlCubierta c{Umbrales{}};
+void test_arranque_sin_posicion_solo_despliega_con_lluvia() {
+  ControlTecho c{Umbrales{}};
   Entradas e = enMedio();
-  e.hum = 90;
+  e.hayLuz = false;
   TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Detenido);
   e.mojado = true;
-  TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Cerrar);
+  TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Desplegar);
 }
 
 void test_detener_gana_a_la_lluvia_durante_la_espera() {
-  ControlCubierta c{Umbrales{}};
-  Entradas e = favorable();
+  ControlTecho c{Umbrales{}};
+  Entradas e = plegado();
   e.mojado = true;
   c.actualizar(e);
   TEST_ASSERT_TRUE(c.comando(Accion::Detener) == ResultadoComando::Aceptado);
@@ -188,35 +184,36 @@ void test_detener_gana_a_la_lluvia_durante_la_espera() {
   e.mojado = true;
   TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Detenido);
   e.ahoraMs = T0 + 60001;
-  TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Cerrar);
+  TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Desplegar);
 }
 
-void test_comandos_en_automatico_y_posicion() {
-  ControlCubierta c{Umbrales{}};
-  c.actualizar(favorable());
-  TEST_ASSERT_TRUE(c.comando(Accion::Cerrar) == ResultadoComando::ModoAutomatico);
-  c.cambiarModo(Modo::Manual);
-  TEST_ASSERT_TRUE(c.comando(Accion::Abrir) == ResultadoComando::YaEnPosicion);
+void test_rechaza_plegar_con_lluvia_y_si_ya_esta() {
+  ControlTecho c{Umbrales{}};
+  Entradas e = desplegado();
+  e.mojado = true;
+  c.actualizar(e);
+  TEST_ASSERT_TRUE(c.comando(Accion::Plegar) == ResultadoComando::LluviaActiva);
+  TEST_ASSERT_TRUE(c.comando(Accion::Desplegar) == ResultadoComando::YaEnPosicion);
 }
 
 void test_manual_vuelve_a_automatico() {
-  ControlCubierta c{Umbrales{}};
-  c.actualizar(favorable());
+  ControlTecho c{Umbrales{}};
+  c.actualizar(plegado());
   c.cambiarModo(Modo::Manual);
-  c.actualizar(favorable(T0 + 30 * 60000 - 1));
+  c.actualizar(plegado(T0 + 30 * MIN - 1));
   TEST_ASSERT_TRUE(c.modo() == Modo::Manual);
-  c.actualizar(favorable(T0 + 30 * 60000));
+  c.actualizar(plegado(T0 + 30 * MIN));
   TEST_ASSERT_TRUE(c.modo() == Modo::Auto);
 }
 
 void test_funciona_al_desbordar_millis() {
-  ControlCubierta c{Umbrales{}};
-  Entradas e = favorable(0xFFFFFFF0u);
+  ControlTecho c{Umbrales{}};
+  Entradas e = plegado(0xFFFFFFF0u);
   e.mojado = true;
   c.actualizar(e);
   e = enMedio(1000);
   e.mojado = true;
-  TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Cerrar);
+  TEST_ASSERT_TRUE(c.actualizar(e) == DirMotor::Desplegar);
   TEST_ASSERT_FALSE(c.atasco());
 }
 
@@ -231,22 +228,21 @@ void test_filtro_asimetrico() {
 
 int main() {
   UNITY_BEGIN();
-  RUN_TEST(test_no_se_mueve_si_todo_esta_bien);
-  RUN_TEST(test_lluvia_cierra_sin_esperar);
+  RUN_TEST(test_de_dia_y_seco_queda_plegado);
+  RUN_TEST(test_lluvia_despliega_sin_esperar);
   RUN_TEST(test_lluvia_manda_sobre_manual);
   RUN_TEST(test_opcion_lluvia_no_manda_en_manual);
-  RUN_TEST(test_lluvia_invierte_apertura);
-  RUN_TEST(test_rechaza_abrir_con_lluvia);
-  RUN_TEST(test_histeresis_humedad);
-  RUN_TEST(test_cierra_por_humedad_y_luz);
+  RUN_TEST(test_lluvia_invierte_un_plegado);
+  RUN_TEST(test_espera_15_min_sin_lluvia_para_plegar);
+  RUN_TEST(test_llovizna_corta_reinicia_los_15_min);
+  RUN_TEST(test_de_noche_despliega_y_no_pliega);
   RUN_TEST(test_espera_entre_acciones);
   RUN_TEST(test_atasco_por_tiempo_y_no_reintenta);
-  RUN_TEST(test_manual_borra_atasco);
+  RUN_TEST(test_comando_borra_atasco_y_pasa_a_manual);
   RUN_TEST(test_ambos_finales_detiene_y_bloquea);
-  RUN_TEST(test_sin_dht_decide_con_luz_y_lluvia);
-  RUN_TEST(test_arranque_sin_posicion_solo_cierra_con_lluvia);
+  RUN_TEST(test_arranque_sin_posicion_solo_despliega_con_lluvia);
   RUN_TEST(test_detener_gana_a_la_lluvia_durante_la_espera);
-  RUN_TEST(test_comandos_en_automatico_y_posicion);
+  RUN_TEST(test_rechaza_plegar_con_lluvia_y_si_ya_esta);
   RUN_TEST(test_manual_vuelve_a_automatico);
   RUN_TEST(test_funciona_al_desbordar_millis);
   RUN_TEST(test_filtro_asimetrico);

@@ -1,0 +1,16 @@
+{
+  "name": "cacaocover-backend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/main.mjs",
+    "simular": "node --disable-warning=ExperimentalWarning src/main.mjs --simular",
+    "test": "node --disable-warning=ExperimentalWarning --test \"test/*.test.mjs\""
+  },
+  "dependencies": {
+    "express": "^5.3.0",
+    "serialport": "^13.0.0",
+    "ws": "^8.22.1"
+  }
+}

@@ -36,6 +36,7 @@ Todo sale de un cargador de 5 V por el USB del ESP32. Usa uno de al menos 2 A: s
 | Constante en `config.h` | Por defecto | Cambia si... |
 |---|---|---|
 | `MOTOR_INVERTIDO` | `false` | "Abrir" mueve la cubierta hacia el final de desplegado |
+| `FC_CONTACTO_NC` | `false` | Los finales se sueldan en COM y NC (en vez de COM y NO) |
 | `LDR_LUZ_EN_BAJO` | `true` | La consola dice `luz=no` con luz |
 | `LLUVIA_MOJADO_EN_BAJO` | `true` | La consola dice `lluvia=si` con el sensor seco |
 

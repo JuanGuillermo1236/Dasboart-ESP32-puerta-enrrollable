@@ -1,13 +1,9 @@
-import type { Estado } from './types.ts';
+import type { MensajeWs } from './types.ts';
 
 // Espera creciente: 1, 2, 4... hasta 30 s.
 export const esperaReintentoMs = (intento: number) => Math.min(30000, 1000 * 2 ** intento);
 
-export function abrirSocket(
-  url: string,
-  onEstado: (e: Estado) => void,
-  onConexion: (conectado: boolean) => void,
-): () => void {
+export function abrirSocket(url: string, onMensaje: (m: MensajeWs) => void, onConexion: (abierto: boolean) => void): () => void {
   let ws: WebSocket | null = null;
   let intento = 0;
   let temporizador: ReturnType<typeof setTimeout> | undefined;
@@ -21,7 +17,7 @@ export function abrirSocket(
     };
     ws.onmessage = (m) => {
       try {
-        onEstado(JSON.parse(m.data as string) as Estado);
+        onMensaje(JSON.parse(m.data as string) as MensajeWs);
       } catch {
         // Un mensaje dañado no debe tumbar la conexión; el siguiente lo reemplaza.
       }

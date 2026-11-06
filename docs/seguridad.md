@@ -1,25 +1,24 @@
-# Reglas de seguridad
+# Reglas de control y seguridad
 
-Se implementan en el firmware (`firmware/src/control/logica.cpp`), nunca en el dashboard, y se prueban con `pio test -e native`.
+Se implementan en el firmware (`firmware/src/control/logica.cpp`), nunca en el dashboard, y se prueban con `pio test -e native`. Plegado = techo abierto; desplegado = techo cerrado.
 
-| # | Regla | Estado |
-|---|---|---|
-| 1 | La lógica automática vive en el ESP32 y sigue funcionando sin WiFi ni página abierta | Activa |
-| 2 | Histéresis en humedad (5 %) y temperatura (2 °C). La luz y la lluvia, que son digitales, se filtran por tiempo | Activa |
-| 3 | 60 s entre acciones automáticas, salvo cierre por lluvia. No aplica a comandos manuales | Activa |
-| 4 | La lluvia cierra también en Manual (`lluvia_manda`), incluso invirtiendo una apertura. Abrir con lluvia se rechaza | Activa; la opción para desactivarla llega con Configuración (ronda C) |
-| 5 | Manual vuelve a Automático tras 30 min, con alerta informativa 2 min antes | Activa |
-| 6 | Tiempo máximo del motor (12 s): detiene y marca posible atasco. No se reintenta solo, ni con lluvia, hasta un comando manual. La detección es solo por tiempo, porque el TB6612FNG no mide corriente | Activa |
-| 7 | Ambos finales de carrera presionados = fallo: detiene, rechaza comandos y genera alerta crítica | Activa |
-| 8 | Sin DHT11 decide solo con lluvia y luz, y genera alerta | Activa |
-| 9 | Arranque seguro: el motor arranca apagado y, sin ningún final presionado, solo se mueve para cerrar si llueve | Activa; el watchdog llega en la ronda C |
-| 10 | PIN con sesión por token. Sobre HTTP es protección contra uso accidental, no contra un atacante | Ronda C |
+| # | Regla |
+|---|---|
+| 1 | La lógica vive en el ESP32: funciona aunque se desconecte el backend o se cierre el dashboard |
+| 2 | **Lluvia:** despliega de inmediato, también en Manual, e invierte un plegado en curso. Plegar con lluvia se rechaza |
+| 3 | **Plegar:** solo de día y tras **15 min sin lluvia**. Cada nueva llovizna reinicia la cuenta |
+| 4 | **Noche:** despliega para proteger del rocío. La oscuridad debe durar 60 s para contar (una sombra no cierra el techo) |
+| 5 | **Espera de 60 s** entre acciones automáticas, salvo la lluvia |
+| 6 | **Tiempo máximo del motor (12 s):** detiene y marca atasco. No se reintenta solo hasta un comando manual. La detección es solo por tiempo, porque el TB6612FNG no mide corriente |
+| 7 | **Ambos finales activos = fallo:** detiene y rechaza comandos. Los finales van en COM y NO: un cable suelto se lee como no pulsado y solo lo cubre el tiempo máximo del motor |
+| 8 | **Detener** se acepta siempre; durante los 60 s siguientes ni la lluvia reanuda el motor |
+| 9 | **Manual** vuelve a Automático tras 30 min. Abrir o cerrar desde el dashboard pasa a Manual |
+| 10 | **Arranque seguro:** motor apagado al iniciar; sin ningún final presionado, solo se mueve para cerrar si llueve |
+| 11 | **Motor:** PWM máximo 170 de 255 y arranque en rampa de 600 ms, para no reiniciar el ESP32 |
 
-Además, **Detener** siempre se acepta, y durante la espera posterior ni la lluvia reanuda el motor: si alguien lo detiene, es porque está interviniendo.
+El DHT11 solo informa temperatura y humedad: no decide.
 
-## Límites que el firmware no puede resolver
+## Límites
 
-- Sin energía, la cubierta no se puede cerrar aunque llueva.
-- Un final de carrera desconectado parece "no presionado": solo lo detecta el tiempo máximo.
+- Sin energía, el techo no se puede cerrar aunque llueva.
 - Mide el recorrido real y ajusta `motorMaxS` en `firmware/src/control/estado.h`; si es menor que el recorrido, cada movimiento terminará en atasco.
-- El proyecto supone una red de confianza con internet (para NTP y Google Fonts).

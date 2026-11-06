@@ -1,15 +1,15 @@
 import preact from '@preact/preset-vite';
 import { defineConfig } from 'vitest/config';
 
-export default defineConfig(({ command }) => ({
+// En desarrollo, la API y el WebSocket los atiende el backend (npm start o npm run simular en backend/).
+export default defineConfig({
   plugins: [preact()],
-  define: { __MOCK__: JSON.stringify(command === 'serve') },
-  build: { target: 'es2020', assetsInlineLimit: 0 },
+  build: { target: 'es2020' },
   server: {
     proxy: {
-      '/api': 'http://localhost:8787',
-      '/ws': { target: 'ws://localhost:8787', ws: true },
+      '/api': 'http://localhost:3000',
+      '/ws': { target: 'ws://localhost:3000', ws: true },
     },
   },
   test: { environment: 'node', include: ['src/**/*.test.ts'] },
-}));
+});

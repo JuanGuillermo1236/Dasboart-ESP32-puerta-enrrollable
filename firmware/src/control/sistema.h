@@ -4,7 +4,7 @@
 #include "estado.h"
 #include "logica.h"
 
-// Une la lógica con el hardware. Los manejadores HTTP corren en otra tarea: todo pasa por un cerrojo.
+// Une la lógica con el hardware.
 
 struct FotoSistema {
   Modo modo;
@@ -12,9 +12,8 @@ struct FotoSistema {
   float tiempoS;
   uint32_t ciclos;
   bool atasco;
-  bool habilitado;
   uint32_t manualRestanteS;
-  char razon[64];
+  Razon razon;
 };
 
 void sistemaIniciar();

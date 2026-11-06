@@ -1,46 +1,33 @@
-// npm run flash: compila el frontend, graba archivos y firmware, y abre la consola serie.
-// npm run flash -- --solo-compilar: lo mismo, sin tocar la placa.
+// npm run flash: graba el firmware completo y abre la consola serie.
+// npm run prueba: graba el firmware de prueba por componentes (etapa 1).
+// Añade -- --solo-compilar para compilar sin tocar la placa.
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const raiz = join(dirname(fileURLToPath(import.meta.url)), '..');
-const firmware = join(raiz, 'firmware');
+const firmware = join(dirname(fileURLToPath(import.meta.url)), '..', 'firmware');
+const entorno = process.argv.includes('--prueba') ? 'prueba' : 'esp32dev';
 const soloCompilar = process.argv.includes('--solo-compilar');
 const python = join(process.env.LOCALAPPDATA ?? '', 'Programs', 'Python', 'Python312', 'python.exe');
 const pio = existsSync(python) ? [python, '-m', 'platformio'] : ['pio'];
 
-function correr(titulo, comando, args, cwd, shell = false) {
+function correr(titulo, ...args) {
   console.log(`\n=== ${titulo} ===`);
-  const r = spawnSync(comando, args, { cwd, stdio: 'inherit', shell });
+  const r = spawnSync(pio[0], [...pio.slice(1), ...args], { cwd: firmware, stdio: 'inherit' });
   if (r.status !== 0) {
     console.error(`\nFalló: ${titulo}.`);
-    if (args.includes('upload') || args.includes('uploadfs')) {
-      console.error('Revisa que la placa esté en COM3, que el monitor serie esté cerrado y usa un cable USB de datos.');
-      console.error('Si se queda en "Connecting...", mantén pulsado BOOT hasta que empiece a grabar.');
+    if (args.includes('upload')) {
+      console.error('Revisa que la placa esté en COM3 y que nada más use el puerto (monitor serie o backend).');
+      console.error('Mantén pulsado BOOT durante toda la grabación.');
     }
     process.exit(r.status ?? 1);
   }
 }
 
-const secretos = join(firmware, 'include', 'secrets.h');
-if (!existsSync(secretos)) {
-  console.error('Falta firmware/include/secrets.h: copia secrets.example.h y pon tu WiFi.');
-  process.exit(1);
-}
-if (readFileSync(secretos, 'utf8').includes('"TuRed"')) {
-  console.warn('Aviso: secrets.h sigue con el WiFi de ejemplo. Verás los datos por consola, pero no el dashboard.');
-}
-
-const pioArgs = (...a) => [...pio.slice(1), ...a];
-correr('Frontend', 'npm', ['run', 'build'], join(raiz, 'frontend'), true);
 if (soloCompilar) {
-  correr('Firmware', pio[0], pioArgs('run'), firmware);
-  correr('Archivos', pio[0], pioArgs('run', '-t', 'buildfs'), firmware);
-  console.log('\nTodo compila. Falta conectar la placa y ejecutar: npm run flash');
+  correr('Compilando', 'run', '-e', entorno);
 } else {
-  correr('Grabando archivos', pio[0], pioArgs('run', '-t', 'uploadfs'), firmware);
-  correr('Grabando firmware', pio[0], pioArgs('run', '-t', 'upload'), firmware);
-  correr('Consola serie (Ctrl + C para salir)', pio[0], pioArgs('device', 'monitor'), firmware);
+  correr('Grabando (mantén pulsado BOOT)', 'run', '-e', entorno, '-t', 'upload');
+  correr('Consola serie (Ctrl + C para salir)', 'device', 'monitor', '-e', entorno);
 }

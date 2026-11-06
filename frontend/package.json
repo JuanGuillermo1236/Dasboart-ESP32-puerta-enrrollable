@@ -1,14 +1,15 @@
 {
   "name": "cacaocover-frontend",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
-    "postinstall": "npm --prefix ../tools/mock-server install --no-audit --no-fund",
     "dev": "vite",
-    "dev:mock": "node ../tools/mock-server/dev.mjs",
-    "build": "tsc --noEmit && vite build && node ../tools/sync-frontend.mjs",
+    "dev:sim": "node ../tools/dev-simulado.mjs",
+    "build": "tsc --noEmit && vite build",
     "flash": "node ../tools/flash.mjs",
+    "prueba": "node ../tools/flash.mjs --prueba",
+    "arduino": "node ../tools/arduino.mjs",
     "lint": "eslint src",
     "test": "vitest run"
   },

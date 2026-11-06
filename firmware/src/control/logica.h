@@ -4,28 +4,28 @@
 
 #include "estado.h"
 
-// Máquina de estados de la cubierta. Código puro: docs/seguridad.md y test/test_control.
+// Máquina de estados del techo. Código puro: docs/seguridad.md y test/test_control.
+// Plegado = techo abierto (cacao al sol); desplegado = techo cerrado.
 
-enum class Accion : uint8_t { Abrir, Cerrar, Detener };
-enum class ResultadoComando : uint8_t { Aceptado, MotorDeshabilitado, ModoAutomatico, FalloFinales, LluviaActiva, YaEnPosicion };
-enum class Razon : uint8_t { Ninguna, Lluvia, Humedad, Temperatura, PocaLuz, Favorable, AperturaManual, CierreManual, DetenidoManual, Atasco, Finales, VueltaAuto };
+enum class Accion : uint8_t { Plegar, Desplegar, Detener };
+enum class ResultadoComando : uint8_t { Aceptado, MotorDeshabilitado, FalloFinales, LluviaActiva, YaEnPosicion };
+enum class Razon : uint8_t { Ninguna, Lluvia, Noche, Favorable, PlegadoManual, DesplegadoManual, DetenidoManual, Atasco, Finales, VueltaAuto };
 
 struct Entradas {
   uint32_t ahoraMs = 0;
   bool mojado = false;
   bool hayLuz = false;
-  bool dhtOk = false;
-  float temp = 0, hum = 0;
-  bool fcAbierto = false;
-  bool fcCerrado = false;
+  bool fcPlegado = false;
+  bool fcDesplegado = false;
 };
 
-class ControlCubierta {
+class ControlTecho {
  public:
-  explicit ControlCubierta(const Umbrales &u) : u_(u) {}
+  explicit ControlTecho(const Umbrales &u) : u_(u) {}
 
   // Devuelve la dirección que debe tener el motor.
   DirMotor actualizar(const Entradas &e);
+  // Plegar o desplegar pasan a modo Manual; Detener se acepta siempre.
   ResultadoComando comando(Accion a);
   void cambiarModo(Modo m);
 
@@ -52,6 +52,8 @@ class ControlCubierta {
   bool atasco_ = false;
   bool sinPosicionArranque_ = true;
   bool pausaPorDetener_ = false;
+  bool huboLluvia_ = false;
+  uint32_t ultimaLluviaMs_ = 0;
   uint32_t ciclos_ = 0;
   uint32_t inicioMs_ = 0;
   uint32_t tMs_ = 0;
@@ -59,4 +61,4 @@ class ControlCubierta {
   uint32_t manualDesdeMs_ = 0;
 };
 
-void textoRazon(Razon r, const Umbrales &u, char *destino, size_t tam);
+const char *textoRazon(Razon r);

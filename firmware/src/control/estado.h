@@ -4,35 +4,23 @@
 // Datos del sistema, sin dependencias de hardware.
 
 enum class Modo : uint8_t { Auto, Manual };
-enum class DirMotor : uint8_t { Detenido, Abrir, Cerrar };
-enum class EstadoCubierta : uint8_t { Abierta, Cerrada, EnMovimiento, Error };
-enum class Tendencia : uint8_t { Ninguna, Sube, Baja, Estable };
+enum class DirMotor : uint8_t { Detenido, Plegar, Desplegar };
+enum class EstadoTecho : uint8_t { Plegado, Desplegado, Plegando, Desplegando, Detenido, Error };
 
 struct Umbrales {
-  int humMax = 75;  // el DHT11 pierde precisión cerca de su límite superior
-  int tempMax = 40;
   int motorMaxS = 12;
-  int pwmPct = 100;
-  int histHum = 5;
-  int histTemp = 2;
+  int pwm = 170;  // de 255
   int esperaAccionS = 60;
+  int secoParaAbrirMin = 15;
   int manualTimeoutMin = 30;
   bool lluviaManda = true;
 };
 
-struct LecturaDht {
-  bool ok = false;
-  bool hayExtremos = false;
-  float temp = 0, hum = 0;
-  float tempMin = 0, tempMax = 0, humMin = 0, humMax = 0;
-  Tendencia tendTemp = Tendencia::Ninguna;
-  Tendencia tendHum = Tendencia::Ninguna;
-};
-
 struct Lecturas {
-  LecturaDht dht;
+  bool dhtOk = false;
+  float temp = 0, hum = 0;
   bool hayLuz = false;
   bool mojado = false;
-  bool fcAbierto = false;
-  bool fcCerrado = false;
+  bool fcPlegado = false;
+  bool fcDesplegado = false;
 };

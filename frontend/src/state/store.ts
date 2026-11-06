@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'preact/hooks';
-import type { Estado } from '../api/types.ts';
+import type { Evento, Foto } from '../api/types.ts';
 
 export const LIMITE_DESACTUALIZADO_MS = 10000;
+const MAX_EVENTOS = 500;
 
 export interface AppState {
-  estado: Estado | null;
-  conectado: boolean;
-  recibidoEn: number | null;
+  foto: Foto | null;
+  socketAbierto: boolean; // conexión con el backend
   ahora: number;
+  eventos: Evento[];
   toast: { texto: string; error: boolean } | null;
 }
 
-let actual: AppState = { estado: null, conectado: false, recibidoEn: null, ahora: Date.now(), toast: null };
+let actual: AppState = { foto: null, socketAbierto: false, ahora: Date.now(), eventos: [], toast: null };
 const oyentes = new Set<() => void>();
 
 export const leer = () => actual;
@@ -21,8 +22,13 @@ export function actualizar(parche: Partial<AppState>): void {
   oyentes.forEach((f) => f());
 }
 
-export const datosDesactualizados = (s: AppState) =>
-  s.recibidoEn !== null && s.ahora - s.recibidoEn > LIMITE_DESACTUALIZADO_MS;
+export function agregarEvento(ev: Evento): void {
+  if (actual.eventos.some((e) => e.id === ev.id)) return;
+  actualizar({ eventos: [ev, ...actual.eventos].slice(0, MAX_EVENTOS) });
+}
+
+export const datosDesactualizados = (s: Pick<AppState, 'foto' | 'ahora'>) =>
+  s.foto?.ultima_lectura != null && s.ahora - s.foto.ultima_lectura > LIMITE_DESACTUALIZADO_MS;
 
 export function useStore(): AppState {
   const [, marcar] = useState(0);
