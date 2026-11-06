@@ -4,6 +4,14 @@ Techo plegable automático para el secado de cacao. Un ESP32 lee los sensores (l
 
 ![Maqueta del techo](docs/img/maqueta.png)
 
+## Capturas del dashboard
+
+| Resumen | Control |
+|---|---|
+| ![Resumen](docs/img/dashboard-resumen.jpg) | ![Control](docs/img/dashboard-control.jpg) |
+| **Historial** | **Bitácora** |
+| ![Historial](docs/img/dashboard-historial.jpg) | ![Bitácora](docs/img/dashboard-bitacora.jpg) |
+
 ## Estructura del proyecto
 
 | Carpeta | Qué contiene |
